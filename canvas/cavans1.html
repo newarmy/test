@@ -1,0 +1,142 @@
+<html> 
+   <head>
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" height="300" width="400"> 
+		
+      </canvas> 
+	  <canvas id="canvas1" height="300" width="400"></canvas>
+	  <script>         
+		var canvas = document.getElementById('canvas');
+		var canvas1 = document.getElementById('canvas1');
+		canvas1.style.display = "none";
+		var ctx = canvas.getContext('2d');
+		var ctx1 = canvas1.getContext('2d');
+		
+		function Scene (opt) {
+			this.dom = opt.dom;
+			this.w = this.dom.width;
+			this.h = this.dom.height;
+			this.ctx = this.dom.getContext('2d');
+			this.arr = [];
+			this.init();
+		}
+		Scene.prototype = {
+			init: function () {
+				var k = this;
+				k.dom.style.border = "1px solid #000";
+				k.initRect();
+				k.event();
+			},
+			initRect: function () {
+				var k = this;
+				k.arr.push(new Rect({
+					x: 40,
+					y: 25,
+					ctx:k.ctx,
+					id: "id"+parseInt(Math.random()*100+""),
+					color: 'red'
+					
+				}));
+				k.arr.push(new Rect({
+					x: 140,
+					y: 25,
+					ctx:k.ctx,
+					id: "id"+parseInt(Math.random()*100+""),
+					color: 'green'
+					
+				}));
+				k.arr.push(new Rect({
+					x: 40,
+					y: 125,
+					ctx:k.ctx,
+					id: "id"+parseInt(Math.random()*100+""),
+					color: '#4432aa'
+					
+				}));
+				k.arr.push(new Rect({
+					x: 160,
+					y: 128,
+					ctx:k.ctx,
+					id: "id"+parseInt(Math.random()*100+""),
+					color: 'blue'
+				}));
+			},
+			event: function () {
+				var k = this;
+				k.dom.addEventListener('click', function (e) {
+					var x = e.clientX;
+					var y = e.clientY;
+					var rect = k.dom.getBoundingClientRect();
+					var cx = x - rect.left*(k.w/rect.width);
+					var cy = y - rect.top*(k.h/rect.height);
+					k.ctx.clearRect(0,0,400,300);
+					//console.log(this);
+					//console.log(cx +" , "+cy);
+					var temp, flag1;
+					for(var i =0; i < k.arr.length; i++) {
+						temp = k.arr[i];
+						flag1 = temp.isIn(cx,cy);
+						if(flag1) {
+							temp.clear();
+						}
+					}
+				});
+			}
+		};
+		function Rect(opt){
+			this.id = opt.id;
+			this.ctx = opt.ctx;
+			this.x = opt.x;
+			this.y = opt.y;
+			this.w = 20;
+			this.h = 20;
+			this.fillStyle = opt.color;
+			this.flag = false;
+			this.init();
+			//console.log(ctx);
+		}
+		Rect.prototype = {
+			init: function () {
+				var k = this;
+				k.ctx.beginPath();
+				k.ctx.fillStyle = k.fillStyle;
+				k.ctx.rect(k.x, k.y, k.w, k.h);
+				k.ctx.fill();
+				//k.ctx.closePath();
+			},
+			redraw: function () {
+				var k = this;
+				k.ctx.beginPath();
+				k.ctx.fillStyle = k.fillStyle;
+				k.ctx.rect(k.x, k.y, k.w, k.h);
+				k.ctx.fill();
+				//k.ctx.closePath();
+			},
+			clear: function () {
+				var k = this;
+				k.ctx.clearRect(k.x, k.y, k.w, k.h);
+			},
+			isIn: function (x,y) {
+				var k = this;
+				k.ctx.beginPath();
+				k.ctx.fillStyle = k.fillStyle;
+				k.ctx.rect(k.x, k.y, k.w, k.h);
+				k.ctx.fill();
+				k.flag = k.ctx.isPointInPath(x,y);
+				//k.ctx.closePath();
+				return k.flag;
+			}
+		};
+		
+		new Scene({dom:document.getElementById('canvas')});
+	  </script>
+	  
+	  
+   </body> 
+ </html>

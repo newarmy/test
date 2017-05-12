@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8" />
+<title>滑块</title>
+<meta name="author" content="dxj" />
+<style>
+*{margin:0;padding:0;}
+#dxj-slider{
+	border:1px solid #000;
+	background:#ccc;
+	height:10px;
+	width:300px;
+	position:relative;
+	border-radius: 3px;
+	cursor:pointer;
+}
+.pos{position:absolute;}
+.dxj-left-ctrl{border-radius:3px;display:block;background:#999; width:9px;height:20px;top:-5px;z-index:2; left:0;}
+.dxj-right-ctrl{border-radius:3px;display:block;background:#999; width:9px;height:20px;top:-5px;z-index:2; left:0;}
+.dxj-select-block{display:block;background:blue; width:100px;height:10px;top:0px;z-index:1; left:1px;}
+.dxj-left-info{border-radius:5px;display:block;background:red;text-align:center;line-height:20px; width:40px;height:20px;top:-25px;z-index:1; left:0;}
+.dxj-right-info{border-radius:5px;display:block;background:red;text-align:center;line-height:20px; width:40px;height:20px;top:-25px;z-index:1; left:0;}
+</style>
+</head>
+<body>
+	<div style="margin:80px 0 0 90px">
+		<div id="dxj-slider">
+			<span class="pos dxj-left-ctrl"></span>
+			<span class="pos dxj-right-ctrl"></span>
+			<div class="pos dxj-left-info"></div>
+			<div class="pos dxj-right-info"></div>
+			<div class="pos dxj-select-block"></div>
+		</div>
+	</div>
+</body>
+<script>
+function xjSlider (opt) {
+	this.box = opt.box;
+	this.min = opt.min || 0;
+	this.max = opt.max || 100;
+	this.step = opt.step || 10;
+	this.values = opt.values || [0, 20];
+	this.width = 0;
+	this.boxleft = 0;
+	this.ctrlw = 0;
+	this.infow = 0;
+	this.ratio = 0;
+	this.space = 0;
+	this.lctrl = null;
+	this.rctrl = null;
+	this.block = null;
+	this.linfo = null;
+	this.rinfo = null;
+	this.dragFlag = false;//是否在拖拽状态
+	this.dragObj = null;//被拖拽dom对象
+	this.dir = '';//那个滑块被拖拽, left or right
+	this.init();
+}
+xjSlider.prototype = {
+	init: function () {
+		var k = this;
+		k.lctrl = k.getDom('dxj-left-ctrl');
+		k.rctrl = k.getDom('dxj-right-ctrl');
+		k.block = k.getDom('dxj-select-block');
+		k.linfo = k.getDom('dxj-left-info');
+		k.rinfo = k.getDom('dxj-right-info');
+		k.width = k.box.scrollWidth;
+		k.ctrlw = k.lctrl.scrollWidth;
+		k.infow = k.linfo.scrollWidth;
+		k.boxleft = k.getDomPos(k.box);
+		k.ratio = k.width/(k.max - k.min);//(数值与像素的比例)
+		k.space = parseInt(k.step*k.ratio);//拖拽最小间隔
+		k.initPos();
+		k.initClickEvent();
+		k.initMoveEvent();
+	},
+	initPos: function () {
+		var k = this;
+		var imin = k.values[0];
+		var imax = k.values[1];
+		var truexPos = imin*k.ratio;
+		var truedPos = imax*k.ratio;
+		var truew = truedPos - truexPos;
+		k.setPos(truexPos,truedPos, truew);
+		k.setView(truexPos, truedPos, imin, imax);
+	},
+	initMoveEvent: function () {
+		var k = this;
+		//触发滑块拖拽， （触发拖拽的对象k.box，被拖拽的对象(lctrl 或者 rctrl)）
+		k.box.onmousedown = function (e) {
+			e = e || window.event;
+			var t = e.target|| e.srcElement;
+			if(e.preventDefault) {
+				e.preventDefault();
+			} else {
+				e.returnValue = false;
+			}
+			var originLeft = e.clientX;
+			var cn = t.className;
+			if(cn.search("dxj-left-ctrl") > -1 ) {
+				//左侧滑块
+				k.dragObj = t;
+				k.dragFlag = true;
+				k.dir = 'left';
+			} else if(cn.search("dxj-right-ctrl") > -1) {
+				//右侧滑块
+				k.dragObj = t;
+				k.dragFlag = true;
+				k.dir = 'right'
+			} else {
+				return;
+			}
+			var newpos;
+			document.onmousemove = function (e) {
+				if(!k.dragFlag) {
+					return;
+				}
+				e = e || window.event;
+				var curLeft = e.clientX;
+				var abs = curLeft - originLeft;
+				var rl = k.getLeft(k.rctrl);
+				var ll = k.getLeft(k.lctrl);
+				//console.log(k.dir + " "+abs+ " "+ ll + "  "+parseInt(k.step*k.ratio));
+				if(k.dir == 'left' && (Math.abs(abs) >= k.space)) {
+					
+					if(abs > 0) {// 向右拖拽
+						newpos = parseInt(ll) + k.space;
+						console.log(newpos);
+						if(newpos >= rl) {
+							newpos = rl;
+						}
+						k.setPos(newpos, null, (rl  - newpos));
+						k.setView(newpos, null,  parseInt(newpos/k.ratio), null);
+					} else {// 向左拖拽
+						newpos = ll - k.space;
+						if(newpos <= 0) {
+							newpos = 0;
+						}
+						k.setPos(newpos, null, (rl  - newpos));
+						k.setView(newpos, null,  parseInt(newpos/k.ratio), null);
+					}
+					originLeft = curLeft;
+				} else if(k.dir == 'right' && (Math.abs(abs) >= k.space)) {
+					if(abs > 0) {// 向右拖拽
+						newpos = parseInt(rl) + k.space;
+						console.log(newpos);
+						if(newpos >= k.width) {
+							newpos = k.width;
+						}
+						k.setPos(null, newpos, (newpos - ll ));
+						k.setView(null, newpos, null, parseInt(newpos/k.ratio));
+					} else {// 向左拖拽
+						newpos = rl - k.space;
+						if(newpos <= ll) {
+							newpos = ll;
+						}
+						k.setPos(null, newpos, (newpos  - ll));
+						k.setView(null, newpos, null, parseInt(newpos/k.ratio));
+					}
+					originLeft = curLeft;
+				}
+				
+			};
+			document.onmouseup = function () {
+				e = e || window.event;
+				var t = e.target|| e.srcElement;
+				//e.preventDefault();
+				document.onmouseup = null;
+				document.onmousemove = null;
+				k.dragObj = null;
+				k.dragFlag = false;
+				k.dir = '';
+			}
+		};
+	},
+	initClickEvent: function () {
+		var k = this;
+		k.box.onclick = function (e) {
+			if(k.dragFlag) {
+				return;
+			}
+			e = e || window.event;
+			var t = e.target|| e.srcElement;
+			var curLeft = e.clientX - k.boxleft;
+			var ll = k.getLeft(k.lctrl);
+			var rl = k.getLeft(k.rctrl);
+			var lv = Math.abs(curLeft - ll);
+			var rv = Math.abs(rl - curLeft);
+			if( lv >= rv) {
+				k.setPos(null, curLeft, (curLeft - ll));
+				k.setView(null, curLeft, null, parseInt(curLeft/k.ratio));
+			} else {
+				k.setPos(curLeft, null, (rl  - curLeft));
+				k.setView(curLeft, null,  parseInt(curLeft/k.ratio), null);
+			}
+		}
+	},
+	setPos: function (lpos, rpos, width) {
+		var k = this;
+		if(lpos !== null)
+		k.lctrl.style.left = (lpos-(k.ctrlw/2)) + "px";
+		if(rpos !== null)
+		k.rctrl.style.left = (rpos-(k.ctrlw/2)) + "px";
+		if(lpos !== null)
+		k.block.style.left = (lpos) + "px";
+		
+		k.block.style.width = width + "px";
+	},
+	setView: function (ll, rl, lv, rv) {
+		var k = this;
+		if(ll !== null)
+		k.linfo.style.left = (ll-(k.infow/2))+'px';
+		if(rl !== null)
+		k.rinfo.style.left = (rl-(k.infow/2))+'px';
+		if(lv !== null)
+		k.linfo.innerHTML = lv;
+		if(rv !== null)
+		k.rinfo.innerHTML = rv;
+	},
+	getDomPos: function (dom) {
+		var left = 0;
+		while(dom) {
+			left += dom.offsetLeft;
+			dom = dom.offsetParent;
+		}
+		var sleft = document.documentElement.scrollLeft;
+		if(sleft) {
+			left = left - sleft;
+		}
+		return left;
+	},
+	getLeft: function (dom) {
+		var leftValue = dom.currentStyle? dom.currentStyle.left : window.getComputedStyle(dom, null).left;
+		var v = leftValue.match(/\d+/)[0];
+		return v;
+	},
+	getDom: function (selector) {
+		var k = this;
+		var aTmp = [];
+		if(k.box.getElementsByClassName) {
+			return k.box.getElementsByClassName(selector)[0];
+		} else {
+			var aEle = k.box.getElementsByTagName('*');
+			for (var i = 0, l = aEle.length; i < l; i++) {
+				if (aEle[i].className.indexOf(selector) != -1) {
+					aTmp.push(aEle[i]);
+				}
+			}
+			return aTmp[0];
+		}
+	}
+};
+new xjSlider({box: document.getElementById('dxj-slider')});
+</script>
+</html>
+			

@@ -1,0 +1,58 @@
+<html> 
+   <head> 
+  
+   </head> 
+   <body> 
+      <canvas id="canvas" height="600" width="600"> 
+		<input id="button" type="range" min="1" max="12">
+      </canvas> 
+	  
+	  <script >
+		var cv = document.getElementById('canvas');
+		var ctx = cv.getContext('2d');
+		//isPointInPath
+		var x = 0, y = 0;
+		var xArr = [], yArr = [], colorArr = [];
+		for(var i =0;i < 10; i++) {
+				colorArr.push('rgba('+(Math.floor(250*Math.random()))+','+(Math.floor(250*Math.random()))+','+(Math.floor(255*Math.random()))+',.5)');
+				xArr.push(400*Math.random()+20);
+				yArr.push(400*Math.random()+20);
+			}
+		function draw(x, y, index) {
+			ctx.clearRect(0,0, 600,600);
+			
+			for(var i =0;i < 10; i++) {
+				ctx.save();
+				if(index == i) {
+					r = 20;
+				} else {
+					r = 10;
+				}
+				ctx.strokeStyle = colorArr[i];
+				ctx.beginPath();
+				ctx.arc(xArr[i],yArr[i],r,0,2*Math.PI);
+				ctx.fill();
+				ctx.closePath();
+				ctx.restore();
+				if(ctx.isPointInPath(x,y)) {
+					draw(0, 0, i);
+				}
+			}
+			
+		};
+		cv.addEventListener('click', function (e) {
+			var cx = e.clientX;
+			var cy = e.clientY;
+			
+			x = cx - cv.offsetLeft;
+			y = cy - cv.offsetTop;
+			draw(x,y, 10);
+		});
+		draw(x,y, 10);
+		console.log(cv);
+	  </script>
+	  
+	  
+	  
+   </body> 
+ </html>

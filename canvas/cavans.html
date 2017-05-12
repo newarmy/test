@@ -1,0 +1,213 @@
+<html> 
+   <head>
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" height="300" width="400"> 
+		<input id="button" type="range" min="1" max="12">
+      </canvas> 
+	  <canvas id="canvas1" height="300" width="400"></canvas>
+	  <script> 
+		/**
+			HTMLCanvasElement:
+			@properties
+				1. height
+				2. width
+			@methods
+				1. captureStream()
+				desc:
+					Returns a CanvasCaptureMediaStream that is a real-time video capture of the surface of the canvas.
+				2. getContext()
+				desc: Returns a drawing context on the canvas, or null if the context ID is not supported. 
+					  A drawing context lets you draw on the canvas.
+					  Calling getContext with "2d" returns a CanvasRenderingContext2D object, 
+					  whereas calling it with "experimental-webgl" (or "webgl") returns a WebGLRenderingContext object. This context is only available on browsers that implement WebGL.
+				3. toDataURL()
+				desc: Returns a data-URL containing a representation of the image in the format specified by the type parameter (defaults to png). 
+				The returned image is in a resolution of 96dpi.
+				4.toBlob()
+				desc: Creates a Blob object representing the image contained in the canvas;
+				this file may be cached on the disk or stored in memory at the discretion of the user agent.
+		
+			
+		
+		
+		*/		
+	 
+	  </script>
+	  
+	  <script>
+		/*
+			CanvasRenderingContext2D:
+				desc: the 2d rendering context for the drawing suface of a <canvas> element.
+				
+				画矩形：
+					clearRect(x, y, width, height)
+					desc: 清除画布
+					fillRect(x, y, width, height)
+					desc: 画矩形
+					strokeRect(x, y, width, height)
+					desc: 画矩形，用当前笔画（stroke）类型
+				画文字：
+					fillText(text, x, y [, maxWidth])
+					desc: 在（x,y）点上写text
+					strokeText(text, x, y [, maxWidth]);
+					desc: 在（x,y）点上写text
+					measureText()
+					desc: Returns a TextMetrics object.
+				线样式：
+					lineWidth： Width of lines. Default 1.0
+					lineGap: Type of endings on the end of lines. 
+							 Possible values: butt (default), round, square.
+					lineJoin: Defines the type of corners where two lines meet.
+							  Possible values: round, bevel, miter (default).
+					miterLimit: Miter limit ratio. Default 10.
+					
+					getLineDash(): 获得虚线的线段长度，线段间隔的数组
+					setLineDash(): 设置虚线的线段长度，线段间隔的数组
+					lineDashOffset：Specifies where to start a dash array on a line.
+				字体样式：
+				    font：Font setting. Default value 10px sans-serif.
+					textAlign： Text alignment setting. Possible values: start (default), end, left, right or center.
+					textBaseline：Baseline alignment setting. Possible values: top, hanging, middle, alphabetic (default), ideographic, bottom.
+					direction： Directionality. Possible values: ltr, rtl, inherit (default).
+				填充和笔画风格
+					fillStyle： Color or style to use inside shapes. Default #000 (black).
+					strokeStyle：Color or style to use for the lines around shapes. Default #000 (black).
+				梯度和模式
+					CanvasGradient ctx.createLinearGradient(x0, y0, x1, y1);
+						desc： 创建线性渐进对象
+					CanvasGradient ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+						desc:创建径向渐进对象
+				    CanvasPattern ctx.createPattern(image, repetition);
+					    desc: 创建样式模式
+				阴影
+					shadowBlur：阴影效果，默认为 0。
+					shadowColor: 阴影颜色，默认为透明
+					shadowOffsetX:阴影水平偏移量。默认 0
+					shadowOffsetY: 垂直偏移量， 默认 0
+				路径
+					beginPath: 通过清空子路径列表，开始一个新路径。
+								当你想创建一个新路径时调用此方法。
+					closePath: 使笔的点移动到当前子路径的开始
+					void moveTo(x, y): 移动到某点
+					void lineTo(x, y)：
+					void ctx.stroke()：画线
+					void ctx.stroke(path)：在path中画线
+					void ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+					cp1x
+						The x axis of the coordinate for the first control point.
+					cp1y
+						The y axis of the coordinate for first control point.
+					cp2x
+						The x axis of the coordinate for the second control point.
+					cp2y
+						The y axis of the coordinate for the second control point.
+					x
+						The x axis of the coordinate for the end point.
+					y
+						The y axis of the coordinate for the end point.
+		
+			void ctx.quadraticCurveTo(cpx, cpy, x, y): 二次Bézier曲线
+			
+					cpx
+					 The x axis of the coordinate for the control point.
+					cpy
+					 The y axis of the coordinate for the control point.
+					x
+					 The x axis of the coordinate for the end point.
+					y
+					 The y axis of the coordinate for the end point.
+			void ctx.arc(x, y, radius, startAngle, endAngle, anticlockwise);
+		    void ctx.arcTo(x1, y1, x2, y2, radius):
+				x1
+				The x axis of the coordinate for the first control point.
+				y1
+				The y axis of the coordinate for the first control point.
+				x2
+				The x axis of the coordinate for the second control point.
+				y2
+				The y axis of the coordinate for the second control point.
+				radius
+				The arc's radius.
+			void ctx.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise); 椭圆
+			void ctx.rect(x, y, width, height)：在path中画矩形
+		绘图路径
+			void ctx.fill();
+			void ctx.fill(fillRule);
+			void ctx.fill(path, fillRule);
+			void ctx.stroke();
+			void ctx.stroke(path);
+			boolean ctx.isPointInPath(x, y); 点是否在路径中
+			boolean ctx.isPointInPath(x, y, fillRule);
+
+			boolean ctx.isPointInPath(path, x, y);
+			boolean ctx.isPointInPath(path, x, y, fillRule);
+			
+			boolean ctx.isPointInStroke(x, y);
+			boolean ctx.isPointInStroke(path, x, y);
+		变换
+			void ctx.rotate(angle)->向变换矩阵添加一个旋转
+			void ctx.scale(x, y) -> 通过横向和垂直向画布单元增加一个缩放变换。
+			void ctx.translate(x, y) ->添加一个平移变换移动画布及其起源和Y X垂直垂直网格。
+		合成:
+		    globalAlpha ->  A number between 0.0 (fully transparent) and 1.0 (fully opaque). The default value is 1.0 Values outside the range,
+			including Infinity and NaN will not be set and
+			globalAlpha will retain its previous value.
+			
+			ctx.globalCompositeOperatio: globalCompositeOperation 属性设置或返回如何将一个源（新的）图像绘制到目标（已有）的图像上。
+			源图像 = 您打算放置到画布上的绘图。
+			目标图像 = 您已经放置在画布上的绘图。
+		*/          
+		var canvas = document.getElementById('canvas');
+		var canvas1 = document.getElementById('canvas1');
+		canvas1.style.display = "none";
+		var ctx = canvas.getContext('2d');
+		var ctx1 = canvas1.getContext('2d');
+		var img = new Image();
+		img.src = 'jh.jpg';
+		img.onload = function () {
+			ctx.drawImage(img, 0, 0, 400, 300);
+			init();
+		}
+		var x = 0;
+		var flag;
+		function init() {
+			//ctx.globalAlpha = "0.5";
+			//ctx.globalCompositeOperation= "overlay";
+			//ctx.fillStyle = "#fff";
+			//ctx.fillRect(0,0,10,300);
+			
+		}
+		function test() {
+			
+			x += 10;
+			if(x > 400) {
+			   x = 0;
+			   clearInterval(flag);
+			   return;
+			}
+			ctx.clearRect(0,0, 400, 300);
+			//ctx1.globalAlpha = "0.5";
+			ctx.drawImage(img, 0, 0, 400, 300);
+			ctx.globalCompositeOperation= "overlay";
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(x,0,10,300);
+		}
+		document.getElementById('canvas').onmouseover = function () {
+			flag = setInterval(test, 50);
+		}
+		/*document.getElementById('canvas').onmouseout = function () {
+			clearInterval(flag);
+			ctx.clearRect(0,0, 400, 300);
+			ctx.drawImage(img, 0, 0, 400, 300);
+		}*/
+	  </script>
+	  
+	  
+   </body> 
+ </html>

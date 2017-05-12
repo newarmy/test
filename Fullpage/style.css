@@ -1,0 +1,27 @@
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+.container{height:500%;overflow:hidden}
+.page{height:20%;}
+.p1{background:blue}
+.p2{background:red}
+.p3{background:yellow}
+.p4{background:orange}
+.p5{background:green}
+
+.nav{
+	position:fixed;
+	right:10px;
+	bottom:10%;
+	width:20px;
+}
+.nav .item{
+	background:#333;
+	height:20px;
+	width:20px;
+	margin-bottom:10px;
+	border-radius:50%;
+	-webkit-transition:-webkit-transform 1s;
+	transition:transform 1s;
+}
+.nav .item:hover {background:#111;-webkit-transform:scale(1.2);transform:scale(1.2)}
+.nav .cur{background:#111;-webkit-transform:scale(1.2);transform:scale(1.2)}

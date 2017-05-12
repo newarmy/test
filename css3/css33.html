@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8" />
+<title>css3 旋转效果</title>
+<meta name="author" content="dxj" />
+<style>
+.test{margin:0;padding-left:50px;list-style:none;border:1px solid #000;}
+.test li{
+        width:50px;
+        height:50px;
+        border:1px solid #000;
+        background:#ddd;
+		overflow:hidden;
+}
+
+.test a{
+    width:48px;
+    height:48px;
+    border:1px solid blue;
+	background:red;
+	filter:alpha(opacity=0);
+	display:block;
+	-webkit-transform:rotate(90deg);
+	-webkit-transform-origin:left bottom;
+	-webkit-transition: -webkit-transform 500ms;
+	-ms-transform:rotate(90deg);
+	-ms-transform-origin:left bottom;
+	-ms-transition: -ms-transform 500ms;
+}
+.test li:hover a{
+	-webkit-transform:rotate(0deg);
+	-ms-transform:rotate(0deg);
+	filter:alpha(opacity=100);
+}
+</style>
+</head>
+<body>
+<ul class="test">
+	<li><a href="#">文字1</a></li>
+	<li><a href="#">文字2</a></li>
+	<li><a href="#">文字3</a></li>
+	<li><a href="#">文字4</a></li>
+</ul>
+</body>
+</html>
+			

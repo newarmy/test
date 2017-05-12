@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8" />
+<title>transform-origin_CSS参考手册_web前端开发参考手册系列</title>
+<meta name="author" content="Joy Du(飘零雾雨), dooyoe@gmail.com, www.doyoe.com" />
+<style>
+.test{margin:0;padding-left:50px;list-style:none;border:1px solid #000;}
+.test li{
+        width:50px;
+        height:50px;
+        border:1px solid #000;
+        background:#ddd;
+	-webkit-transform-origin:center center;
+	-webkit-transform:rotate(100deg);
+	transform-origin:center center;
+	transform:rotate(100deg);
+	-webkit-transition: transform 1000s ;
+	transition:transform 1000s;
+}
+.test li:hover{
+	-webkit-transform:rotate(270deg);
+	transform:rotate(270deg);
+}
+.test1 {margin-top:10px;}
+.test1 img{
+	opacity:.2;
+	-webkit-trasition: opacity 1000 ease-out 1000;
+}
+.test1 img:hover{
+	opacity:1;
+}
+</style>
+</head>
+<body>
+<ul class="test">
+	<li></li>
+	<li></li>
+	<li></li>
+	<li></li>
+	<li></li>
+	<li></li>
+</ul>
+<div class="test1">
+	<img src="http://img4.99114.com/group1/M00/10/2C/wKgGMFVKtUeAIF4eAADB3RLXhgk842.jpg" />
+</div>
+</body>
+</html>
+			

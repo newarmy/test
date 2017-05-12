@@ -1,0 +1,109 @@
+<html> 
+   <head>
+    <title>裁剪路径</title>
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+  <script src="ichart.js"></script>
+   </head> 
+   <body> 
+     <div id="canvasDiv"></div>
+      <canvas id="canvas" height="800" width="400"> 
+      </canvas> 
+	  <script>
+	       window.addEventListener('click', function() {
+		   var data = [
+			        	{name : '首付',value : 30,color:'#d9443c'},
+			        	{name : '月付',value : 25,color:'#dddddd'},
+			        	{name : '尾款',value : 75,color:'#c9a86a'},
+			        	{name : '税费及手续费',value : 50,color:'#494949'}
+		        	];
+				chart.load(data);
+		   });
+			var data = [
+			        	{name : '首付',value : 30,color:'#d9443c'},
+			        	{name : '月付',value : 25,color:'#dddddd'},
+			        	{name : '尾款',value : 15,color:'#c9a86a'},
+			        	{name : '税费及手续费',value : 20,color:'#494949'}
+		        	];
+	    	
+			var chart = new iChart.Donut2D({
+				render : 'canvasDiv',
+				animation: true,
+				//环形中心文本的配置项，若给出字符串，则用默认配置进行渲染标题，若给出对象，则配置为 iChart.Text对象。如果text属性为空则不显示标题。
+				center:{
+					//text:'CORE\nSKILLS',
+					shadow:true,
+					shadow_offsetx:0,
+					shadow_offsety:2,
+					shadow_blur:2,
+					shadow_color:'#b7b7b7',
+					color:'#6f6f6f'
+				},
+				
+				data: data,
+				//组件中水平偏移量，正数向右，负数向左。单位像素。(默认为0)
+				offsetx:0,
+				shadow:true,
+				background_color:'#fff',
+				separate_angle:0,//所有扇形分离的角度
+				tip:{
+					enable:true,
+					showType:'fixed'
+				},
+				/*legend : {
+					enable : true,
+					shadow:true,
+					background_color:null,
+					border:false,
+					legend_space:30,//图例间距
+					line_height:34,//设置行高
+					sign_space:10,//小图标与文本间距
+					sign_size:30,//小图标大小
+					color:'#6f6f6f',
+					fontsize:30//文本大小
+				},*/
+				//sub_option扇形区的配置项。
+				//可参考:iChart.Sector，iChart.Sector2D，iChart.Sector3D
+				sub_option:{
+					label:false,
+					color_factor : 0.3
+				},
+				//是否显示为百分比值。(默认为false)
+				showpercent:true,
+				decimalsnum:2,
+				width : 800,
+				height : 400,
+				//指定饼图的半径。单位px。如果给出值为字符串百分比形式，则按照绘图区有效最小高度/宽度比计算。(默认为'100%')。
+				radius:140
+			});
+
+			/**
+			 *利用自定义组件构造左侧说明文本。
+			 */
+			/*chart.plugin(new iChart.Custom({
+					drawFn:function(){
+						/**
+						 *计算位置
+						 */	
+						var y = chart.get('originy');
+						/**
+						 *在左侧的位置，设置竖排模式渲染文字。
+						 */
+						/**chart.target.textAlign('center')
+						.textBaseline('middle')
+						.textFont('600 24px 微软雅黑')
+						.fillText('攻城师需要掌握的核心技能',100,y,false,'#6d869f', 'tb',26,false,0,'middle');
+						
+					}
+			}));*/
+			
+			chart.draw();
+		
+	
+	   //window.requestAnimationFrame(clock);
+	  </script>
+   </body> 
+ </html>

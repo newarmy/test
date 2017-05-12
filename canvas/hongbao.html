@@ -1,0 +1,204 @@
+<html> 
+   <head>
+    <title>红包</title>
+	<meta charset="UTF-8">
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" width="300" height="800" style="border:1px solid red"> 
+      </canvas> 
+	  <button id="start">开始游戏</button>
+	  <button id="timeCount" style="color:red;">0</button>
+	  <script>
+	  
+	  var ctx = document.getElementById('canvas').getContext('2d');
+	  //事件坐标
+	  var EventObj = {
+			x : Number.MAX_VALUE,
+			y : Number.MAX_VALUE
+	  };
+	  //舞台信息
+	  var StageObj = {
+		w: 300,
+		h: 800
+	  };
+	  //舞台类
+	  function Stage (opt) {
+		  this.totalActor = opt.totalActor|| 50;
+		  this.ctx = opt.ctx;
+		  this.onStageArr = [];
+		  this.batchActor = 4;//一次出场4个actor
+		  this.initY = -60;
+		  this.HBWidth = 60;//红包宽度
+		  this.count = 0;//红包计数
+		  this.initXArr = [];
+		  this.init();
+	  }
+	  Stage.prototype = {
+		init: function () {
+			var k = this;
+			k.clearStage();
+			k.batchOnStage();
+			k.event();
+		},
+		event: function () {
+			var k = this;
+			document.getElementById('canvas').addEventListener('click', function (e) {
+				var x1 = e.clientX - this.offsetLeft;
+				var y1 = e.clientY - this.offsetTop;
+				EventObj.x = x1;
+				EventObj.y = y1;
+			});
+		},
+		perform: function () {//表演
+			var k = this;
+			k.clearStage();
+			k.onStageArr.forEach(function (actor) {
+				if(actor.destroy) {
+					return;
+				}
+				actor.redraw();
+			});
+			var lastActor = k.onStageArr[k.onStageArr.length -1];
+			if(k.count < k.totalActor && lastActor && lastActor.y > 160) {
+				k.batchOnStage();
+			}
+		},
+		clearStage: function () {
+			var k = this;
+			k.ctx.clearRect(0,0, StageObj.w, StageObj.h);
+		},
+		batchOnStage: function () {//第一次出场的actor
+			var k = this, x;
+			k.initXArr = [];
+			for(var i = 0; i < 4; i++) {
+				k.count++;
+				if(k.count > k.totalActor) {
+					return;
+				}
+				x = StageObj.w*i/4+(StageObj.w/4-k.HBWidth)*Math.random();
+				k.onStageArr.push(new HB({
+					x: x,
+					y: k.initY,
+					speed: 2+(Math.random()),
+					ctx : k.ctx,
+					imgUrl: 'images/hb.png',
+					onImgUrl: 'images/onhb.jpg'
+				}));
+			}
+			
+		}
+	  };
+	  //演员类
+	  function HB(opt) {
+		this.x = opt.x;
+		this.y = opt.y;
+		this.type = 1;//红包类型
+		this.speed = opt.speed || 5;//下移速度
+		this.img = null;
+		this.onImg = null;
+		this.imgUrl = opt.imgUrl;
+		this.onImgUrl = opt.onImgUrl;
+		this.fade = 0;//点击后隐藏注销
+		this.ctx = opt.ctx;
+		this.isClick = false;//是否这个红包被点击
+		this.destroy = false;//是否注销这个红包
+		this.init();
+	  }
+	  HB.prototype = {
+		contructor:HB,
+		init: function () {
+			var k = this;
+			k.ctx.globalAlpha = 1;
+			k.img = new Image();
+			k.img.src = k.imgUrl;
+			k.onImg = new Image();
+			k.onImg.src = k.onImgUrl;
+			k.draw(k.x, k.y);
+		},
+		draw: function (x, y) {
+			var k = this;
+			k.ctx.save();
+			k.ctx.beginPath();
+			//
+			k.ctx.fillStyle = "#ffffff";
+			if(k.isClick) {
+				k.fade +=0.01;//隐藏速度0.02
+				k.ctx.globalAlpha = k.fade;
+				ctx.globalCompositeOperation = "destination-over";
+				if( k.fade >= 1) {
+					k.destroy = true;
+					ctx.globalCompositeOperation = "destination-in";
+				}
+			}
+			var cur = (k.isClick)? k.onImg : k.img;
+			k.ctx.rect(x, y, 60, 60);
+			k.ctx.fill();
+			k.ctx.drawImage(cur, x, y, 60, 60);
+			k.ctx.restore();
+			//console.log(k.ctx.isPointInPath(EventObj.x,EventObj.y));
+			if(k.ctx.isPointInPath(EventObj.x,EventObj.y)) {
+				k.isClick = true;
+				EventObj.x = Number.MAX_VALUE;
+				EventObj.y = Number.MAX_VALUE;
+			}
+		},
+		redraw: function () {
+			var k = this;
+			k.y = k.y + k.speed;
+			//console.log("k.destory = "+k.destroy);
+			if(k.y > StageObj.h) {
+				k.destroy = true;
+				return;
+			}
+			
+			k.draw(k.x, k.y);
+		}
+		
+	  };
+	  var countDom = document.getElementById('timeCount');
+	  var stage = null;var startTime, curTime,
+	  startSecond,
+	  startMinute,
+	  curSecond,
+	  curMinute,
+	  secondCount;
+	  function preform() {
+		//console.log(222);
+		stage.perform();
+	    curTime = new Date();
+		var preSecond , nextSecond;
+		curSecond = curTime.getSeconds();
+		curMinute = curTime.getMinutes();
+		if(curMinute === startMinute) {
+			secondCount = curSecond - startSecond;
+		} else {
+			preSecond = 59 - startSecond;
+			secondCount = curSecond + preSecond;
+		}
+		
+		countDom.innerHTML = secondCount;
+		if(secondCount == 15) {
+			alert('game over'+ stage.count);
+			return;
+		}
+		window.requestAnimationFrame(preform);
+	  }
+	  
+	  
+	  document.getElementById('start').onclick = function (e) {
+	     startTime = new Date();
+		 startSecond = startTime.getSeconds();
+		 startMinute = startTime.getMinutes();
+		 stage = new Stage({
+			ctx: ctx
+		 });
+		 window.requestAnimationFrame(preform);
+	  }
+	  </script>
+   </body> 
+ </html>

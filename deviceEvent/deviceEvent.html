@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8" />
+<title>css3 3d 全景</title>
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="author" content="dxj" />
+<style>
+    #box{
+    	width: 100px;
+    	height: 100px;
+    	border:1px solid #000;
+    	padding:100px;
+    	-webkit-perspective:300px;
+    	/*
+    	指定观察者与「z=0」平面的距离，使具有三维位置变换的元素产生透视效果。
+    	「z>0」的三维元素比正常大，而「z<0」时则比正常小，大小程度由该属性的值决定。
+
+		它为透视深度，也就是z轴的深度，z轴在哪呢？以前我们只有二维，
+		横着为x竖着为y，这个z轴就是垂直于我们眼睛的轴线。
+    	*/
+    	perspective:300px;
+
+    }
+    #div{
+    	width: 100px;
+    	height: 100px;
+    	color: #fff;
+    	font-size: 50px;
+    	line-height: 100px;
+    	text-align: center;
+    	position: relative;
+    	-webkit-transform-style:preserve-3d;
+    	/*指定某元素的子元素是（看起来）位于三维空间内，还是在该元素所在的平面内被扁平化。*/
+    	transform-style:preserve-3d;
+    	-webkit-transform-origin:center center -50px;
+    	/*
+			设置或检索对象以某个原点进行转换。
+			该属性提供2个参数值。
+			如果提供两个，第一个用于横坐标，第二个用于纵坐标。
+			如果只提供一个，该值将用于横坐标；纵坐标将默认为50%。
+    	*/
+    	transform-origin:center center -50px;
+    	transition: 5s;
+    	perspective-origin: center center;
+    	-webkit-perspective-origin: 50% 50%;
+    }
+    #div span{
+    	position: absolute;
+	    left: 0;
+	    top: 0;
+	    width: 100px;
+	    height: 100px;
+	    -webkit-transform-origin: center center -50px;
+	    transform-origin: center center -50px;
+    }
+    #div span:nth-of-type(1){
+    	background-color: red;
+    	-webkit-transform:rotateY(0deg);
+    	transform:rotateY(0deg);
+    }
+     #div span:nth-of-type(2){
+    	background-color: yellow;
+    	-webkit-transform:rotateY(90deg);
+    	transform:rotateY(90deg);
+    }
+     #div span:nth-of-type(3){
+    	background-color: blue;
+    	-webkit-transform:rotateY(180deg);
+    	transform:rotateY(180deg);
+    }
+     #div span:nth-of-type(4){
+    	background-color: green;
+    	-webkit-transform:rotateY(270deg);
+    	transform:rotateY(270deg);
+    }
+     #div span:nth-of-type(5){
+    	background-color: pink;
+    	-webkit-transform:rotateX(90deg);
+    	transform:rotateX(90deg);
+    }
+     #div span:nth-of-type(6){
+    	background-color: #000;
+    	-webkit-transform:rotateX(-90deg);
+    	transform:rotateX(-90deg);
+    }
+    
+</style>
+<script>
+  //deviceorientation 提供设备的物理方向信息，表示为一系列本地坐标系的旋角。
+ /*  window.addEventListener("deviceorientation", function(event) {
+      // 处理event.alpha、event.beta及event.gamma
+  }, true);
+
+    event.alpha: 手机绕z轴旋转的角度[0, 360) （ios）手机顶部水平向左为0，手机顶部水平向右为180，(向右加， 向左减小)
+    event.beta: 手机绕x轴旋转的角度[-180, 180)（ios）想后减小， 向前增加
+    event.gamma : 手机绕Y轴旋转的角度[-90, 90)（ios）向右加(+)，向左减小(-)
+  */
+
+window.addEventListener('deviceorientation', function (event) {
+   var dev = document.querySelector('#device');
+
+   var a = 360 - event.alpha;
+   var b = event.beta;
+   var g = event.gamma;
+
+   dev.innerHTML = a +" "+b+ " "+g;
+})
+
+/*
+    devicemotion 提供设备的加速信息，表示为定义在设备上的坐标系中的卡尔迪坐标。
+    其还提供了设备在坐标系中的自转速率。若可行的话，事件应该提供设备重心处的加速信息
+*/
+</script>
+</head>
+<body>
+    <div id="device"></div>
+	<div id="box">
+	    <div id="div">
+	        <span>前</span>
+	        <span>右</span>
+	        <span>后</span>
+	        <span>左</span>
+	        <span>上</span>
+	        <span>下</span>
+	    </div>
+	</div>
+	<script type="text/javascript">
+		
+		window.onload = function(){
+		    var div = document.querySelector('#div');
+		    //div.style.WebkitTransform = div.style.transform = "rotateX(360deg)";
+		    div.style.WebkitTransform = div.style.transform = "rotateY(-360deg)";
+		    div.style.WebkitTransform = div.style.transform = "translateZ(50px)";
+		    var z = 0;
+		    document.addEventListener('click', function () {
+		    	z+=5;
+		    	div.style.WebkitTransform = 'translateZ('+z+'px)';
+		    });
+		};
+	</script>
+</body>
+</html>
+<script>
+/*
+
+    (e.prototype, {
+                        lon : 0,
+                        lat : 0,
+                        direction : 0,
+                        fix : 0,
+                        os : "",
+                        initialize : function () {
+                            switch (this.lon = 0, this.lat = 0, this.direction = window.orientation || 0, this.direction) {
+                            case 0:
+                                this.fix = 0;
+                                break;
+                            case 90:
+                                this.fix = -270;
+                                break;
+                            case -90:
+                                this.fix = -90
+                            }
+                            navigator.userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/) ? this.os = "ios" : this.os = navigator.userAgent.indexOf("Android") > -1 || navigator.userAgent.indexOf("Linux") ? "android" : ""
+                        },
+                        init : function () {
+                            this._orient = this.orientHandler.bind(this),
+                            window.addEventListener("deviceorientation", this._orient, !1),
+                            this._change = this.changeHandler.bind(this),
+                            window.addEventListener("orientationchange", this._change, !1)
+                        },
+                        destroy : function () {
+                            window.removeEventListener("deviceorientation", this._orient, !1),
+                            window.removeEventListener("orientationchange", this._change, !1)
+                        },
+                        changeHandler : function (t) {
+                            this.direction = window.orientation
+                        },
+                        orientHandler : function (t) {
+                            switch (this.os) {
+                            case "ios":
+                                switch (this.direction) {
+                                case 0:
+                                    this.lon = t.alpha + t.gamma,
+                                    t.beta > 0 && (this.lat = t.beta - 90);
+                                    break;
+                                case 90:
+                                    t.gamma < 0 ? this.lon = t.alpha - 90 : this.lon = t.alpha - 270,
+                                    t.gamma > 0 ? this.lat = 90 - t.gamma : this.lat = -90 - t.gamma;
+                                    break;
+                                case -90:
+                                    t.gamma < 0 ? this.lon = t.alpha - 90 : this.lon = t.alpha - 270,
+                                    t.gamma < 0 ? this.lat = 90 + t.gamma : this.lat = -90 + t.gamma
+                                }
+                                break;
+                            case "android":
+                                switch (this.direction) {
+                                case 0:
+                                    this.lon = t.alpha + t.gamma + 30,
+                                    t.gamma > 90 ? this.lat = 90 - t.beta : this.lat = t.beta - 90;
+                                    break;
+                                case 90:
+                                    this.lon = t.alpha - 230,
+                                    t.gamma > 0 ? this.lat = 270 - t.gamma : this.lat = -90 - t.gamma;
+                                    break;
+                                case -90:
+                                    this.lon = t.alpha - 180,
+                                    this.lat = -90 + t.gamma
+                                }
+                            }
+                            this.lon += this.fix,
+                            this.lon %= 360,
+                            this.lon < 0 && (this.lon += 360),
+                            this.lon = Math.round(this.lon),
+                            this.lat = Math.round(this.lat),
+                            this.handler && this.handler.apply(this, [{
+                                        a : Math.round(t.alpha),
+                                        b : Math.round(t.beta),
+                                        g : Math.round(t.gamma),
+                                        lon : this.lon,
+                                        lat : this.lat,
+                                        dir : this.direction
+                                    }
+                                ])
+                        }
+                    }),
+                    e
+                })
+*/
+</script>			

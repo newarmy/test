@@ -1,0 +1,63 @@
+
+
+
+
+<!Doctype html>
+<html> 
+<head>
+
+</head>
+<body>
+<div id="map">
+</div>
+<div id="forEach">
+</div>
+<div id="reduce">
+</div>
+<div id="every">
+</div>
+<div id="filter">
+</div>
+<script>
+function g(id){
+	return document.querySelector(id);
+}
+  var arr = [1, 2, 3];
+  var arr1 = [];
+  //map  返回新的数组 ， callback return 每个元素执行完的值
+  arr = arr.map(function(curValue,index,array) {
+	return curValue+1;
+  });
+  g("#map").innerHTML = arr.join('-');
+  //forEach 返回值   undefined  每个元素中去执行这个方法
+  arr.forEach(function(curValue, index, array) {
+	arr1.push(curValue+2);
+  });
+  g("#forEach").innerHTML = arr1.join('-');
+  //reduce 执行array中的所有元素相加
+  var sum = arr.reduce(function(previousValue, currentValue, index, array) {
+	return previousValue+currentValue;
+  },0);
+  g("#reduce").innerHTML = sum;
+  //every ，如果有一个元素不符合callback中的条件，就返回false
+  var res = arr.every(function(currentValue, index, array){
+	return currentValue <= 10;
+  });
+  var res1 = arr.every(function(currentValue, index, array){
+	return currentValue > 3;
+  });
+  g("#every").innerHTML = res +" "+res1;
+  // filter 过滤符合条件的值
+  function isBigEnough(value) {
+	  return value >= 10;
+	}
+  var filtered = [12, 5, 8, 130, 44].filter(isBigEnough);
+   g("#filter").innerHTML = filtered.join('-');
+</script>
+
+
+
+
+</body>
+</html>
+

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head >
+	<title>海报</title>
+	<meta charset="UTF-8">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<style>
+		.stage{
+			margin:100px auto;
+			height:300px;
+			-webkit-perspective: 1000px;
+		}
+		.box {
+			margin: 0 auto;
+			position:relative;
+			width:300px;
+			height:300px;
+			-webkit-transform-style:preserve-3d;
+			transition: 1s;
+		}
+		.box .img{
+			position:absolute;
+			display:block;
+			width:300px;
+			height:300px;
+			-webkit-background-size:contain;
+			transition: 1s;
+		}
+		.box .img1{
+			background: url('./images/1.jpg') no-repeat;
+			-webkit-transform: rotateY(0deg);
+		}
+		.box .img2{
+			background: url('./images/2.jpg') no-repeat;
+			-webkit-transform: rotateY(72deg);
+		}
+		.box .img3{
+			background: url('./images/3.jpg') no-repeat;
+			-webkit-transform: rotateY(144deg);
+		}
+		.box .img4{
+			background: url('./images/4.jpg') no-repeat;
+			-webkit-transform: rotateY(216deg);
+		}
+		.box .img5{
+			background: url('./images/5.jpg') no-repeat;
+			-webkit-transform: rotateY(288deg);
+		}
+	</style>
+</head>
+<body>
+   <div class="stage">
+		<div class="box">
+			<span class="img img1"></span>
+			<span class="img img2"></span>
+			<span class="img img3"></span>
+			<span class="img img4"></span>
+			<span class="img img5"></span>
+		</div>
+   </div>
+<script>  
+var stage = document.querySelector('.stage');
+	var box = document.querySelector('.box');
+	var imgs = document.querySelectorAll('.img');
+	var z = 150/ Math.tan(Math.PI*36/180);
+     var len = imgs.length;
+	 for(var i = 0 ; i < len; i++){
+		imgs.item(i).style.transform = 'rotateY('+(i+1)*72+'deg) translateZ('+z+'px)';
+	 }
+	 rotate = 0;
+	 box.addEventListener('click', function() {
+		rotate +=72;
+		box.style.transform = 'rotateY('+rotate+'deg)';
+	 });
+	stage.style.perspective = z+'px';
+</script>
+</html>

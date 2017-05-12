@@ -1,0 +1,103 @@
+<html> 
+   <head>
+    <title>裁剪路径</title>
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" height="500" width="500"> 
+      </canvas> 
+	  <script>
+		var vertexShaderStr = 'attribute vec4 aVertexPosition;'+
+			'attribute float a_size; '+
+			'void main(void) {'+
+			'gl_Position = aVertexPosition; '+
+			'gl_PointSize = a_size; '+
+			'}';
+		var fragmentShaderStr = 'void main(void) {'+
+		'gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
+	    function initProgram(ctx, vertexShaderStr, fragmentShaderStr) {
+			var vertexShader = ctx.createShader(ctx.VERTEX_SHADER);
+			var flagShader = ctx.createShader(ctx.FRAGMENT_SHADER);
+			ctx.shaderSource(vertexShader, vertexShaderStr);
+			ctx.shaderSource(flagShader, fragmentShaderStr);
+			ctx.compileShader(vertexShader);
+			ctx.compileShader(flagShader);
+			
+			var shaderProgram = ctx.createProgram();
+			ctx.attachShader(shaderProgram, vertexShader);
+			ctx.attachShader(shaderProgram, flagShader);
+			ctx.linkProgram(shaderProgram);
+			ctx.useProgram(shaderProgram);
+			return shaderProgram;
+		}
+		var gl;
+		
+		function start(){
+			var canvas = document.getElementById('canvas');
+			gl = initWebGL(canvas);
+			var program = initProgram(gl, vertexShaderStr, fragmentShaderStr);
+			var a_size = gl.getAttribLocation(program, 'a_size');
+			var aVertexPosition = gl.getAttribLocation(program, 'aVertexPosition');
+			
+			var vertexData = new Float32Array([
+				0.0, 0.0, 10.0,
+				-.5, -.5, 20.0,
+				.5, .5, 30.0
+			]);
+			var FSIZE = vertexData.BYTES_PER_ELEMENT;
+			var vtBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, vtBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+			gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, FSIZE * 3, 0);
+			gl.enableVertexAttribArray(aVertexPosition);
+			
+			gl.vertexAttribPointer(a_size, 1, gl.FLOAT, false, FSIZE * 3, FSIZE*2);
+			gl.enableVertexAttribArray(a_size);
+			/*
+			//POSITION
+			var pos_data = new Float32Array([
+				0.0, 0.0, -.5, -.5, .5, .5
+			]);
+            var posBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, pos_data, gl.STATIC_DRAW);
+			gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(aVertexPosition);
+			 
+			 //SIZE
+			
+			 var squareBuffer = gl.createBuffer();
+			 gl.bindBuffer(gl.ARRAY_BUFFER, squareBuffer);
+			 var vertices = [
+			10.0,  12.0,  40.0];
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+			gl.vertexAttribPointer(a_size, 1, gl.FLOAT, false, 0, 0);
+			gl.enableVertexAttribArray(a_size);
+			*/
+			
+			gl.clearColor(0.0,0.0,0.0,1.0);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			gl.drawArrays(gl.POINTS, 0, 3);
+			
+		}
+	  start();
+	  
+	    function initWebGL(canvas){
+			var gl = null;
+			try{
+			
+				gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+			}catch(e) {
+			}
+			if(!gl) {
+				gl = null;
+			}
+			return gl;
+		}
+	  </script>
+   </body> 
+ </html>

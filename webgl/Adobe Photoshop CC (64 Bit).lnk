@@ -1,0 +1,88 @@
+<html> 
+   <head>
+    <title>点2</title>
+	<meta charset="utf-8" />
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" height="500" width="500"> 
+      </canvas> 
+	   <script src="index.js"></script>
+	  <script src="lib.js"></script>
+	  <script>
+	    var vertexShaderString = " attribute vec4 aVertexPositoin;"+
+		"uniform mat4 u_ModelMatrix;"+
+		" void main() {"+
+		"gl_Position = u_ModelMatrix*aVertexPositoin;"+   //设置坐标
+		"}";//设置尺寸
+	     var fragmentShaderString ="void main() {"+
+		 "gl_FragColor = vec4(1.0,0.0,0.0,1.0); }";//设置颜色
+		 
+		var gl = initWebGL(getDom('canvas'));
+		
+		var tx = .5, ty = .5, tz = 0.0;
+		
+		var program = initProgram(gl, vertexShaderString, fragmentShaderString);
+	   
+	   function initVertexBuffers(gl) {
+		var vertices = new Float32Array([0.0,.5,-.5,-.5,0.5,-.5]);
+		var n = 3;
+		var vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+		
+		var a_pos = gl.getAttribLocation(program, 'aVertexPositoin');
+		gl.vertexAttribPointer(a_pos, 2, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(a_pos);
+		return n;
+		
+	   }
+	   var modelMatrix = new Matrix4();
+	   var curAngle = 0.0;
+	   var ANGLE_STEP = 45.0;
+	   var u_ModelMatrix = gl.getUniformLocation(program, 'u_ModelMatrix');
+	   var n = initVertexBuffers(gl);
+	   
+	   
+	   function draw(gl, n, currentAngle, modelMatrix, u_ModelMatrix){
+		modelMatrix.setRotate(currentAngle, 0, 0, 1);
+		gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+		 gl.clearColor(0.0,0.0,0.0,1.0);
+	     gl.clear(gl.COLOR_BUFFER_BIT);
+	     gl.drawArrays(gl.LINE_LOOP, 0, n);
+	   }
+	   
+	   var last = Date.now();
+	   function animate(angle) {
+			var now = Date.now();
+			var elapsed = now - last;
+			var newAngle = angle + (ANGLE_STEP*elapsed)/1000.0;
+			last = now;
+			return newAngle %= 360;
+	   }
+		var tick = function() {
+		  curAngle = animate(curAngle);
+		  draw(gl, n, curAngle, modelMatrix, u_ModelMatrix);
+		  requestAnimationFrame(tick);
+	   };
+	  tick();
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	  
+	    
+	  </script>
+   </body> 
+ </html>

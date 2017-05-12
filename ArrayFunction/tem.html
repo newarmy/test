@@ -1,0 +1,33 @@
+
+
+
+
+<!Doctype html>
+<html> 
+<head>
+
+</head>
+<body>
+<div id="map">
+</div>
+<div id="forEach">
+</div>
+<div id="reduce">
+</div>
+<div id="every">
+</div>
+<div id="filter">
+</div>
+<script src="template.js"></script>
+<script>
+var dd = '<ul><%for(var i = 0, len = list.length; i < len; i++){%><li><%=list[i].name%></li><%}%></ul>';
+var t = template(dd, {list: [{name: 'name1'}, {name: 'name3'}, {name: 'name2'}]});
+document.getElementById('map').innerHTML = t;
+</script>
+
+
+
+
+</body>
+</html>
+

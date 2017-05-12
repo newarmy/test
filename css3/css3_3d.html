@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8" />
+<title>css3 3d 全景</title>
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="author" content="dxj" />
+<style>
+    .box{
+    	width: 100px;
+    	height: 100px;
+    	border:1px solid #000;
+    	padding:100px;
+    	-webkit-perspective:300px;
+    	/*
+    	指定观察者与「z=0」平面的距离，使具有三维位置变换的元素产生透视效果。
+    	「z>0」的三维元素比正常大，而「z<0」时则比正常小，大小程度由该属性的值决定。
+
+		它为透视深度，也就是z轴的深度，z轴在哪呢？以前我们只有二维，
+		横着为x竖着为y，这个z轴就是垂直于我们眼睛的轴线。
+    	*/
+    	perspective:300px;
+
+    }
+    .div{
+    	width: 100px;
+    	height: 100px;
+    	color: #fff;
+    	font-size: 50px;
+    	line-height: 100px;
+    	text-align: center;
+    	position: relative;
+    	-webkit-transform-style:preserve-3d;
+    	/*指定某元素的子元素是（看起来）位于三维空间内，还是在该元素所在的平面内被扁平化。*/
+    	transform-style:preserve-3d;
+    	-webkit-transform-origin:center center -50px;
+    	/*
+			设置或检索对象以某个原点进行转换。
+			该属性提供2个参数值。
+			如果提供两个，第一个用于横坐标，第二个用于纵坐标。
+			如果只提供一个，该值将用于横坐标；纵坐标将默认为50%。
+    	*/
+    	transform-origin:center center -50px;
+    	transition: 5s;
+    }
+    .div span{
+    	position: absolute;
+	    left: 0;
+	    top: 0;
+	    width: 100px;
+	    height: 100px;
+	    -webkit-transform-origin: center center -50px;
+	    transform-origin: center center -50px;
+    }
+    .div1 span{
+    	background-color: red;
+    	-webkit-transform:rotateY(0deg);
+    	transform:rotateY(0deg);
+    }
+     .div2 span{
+    	background-color: yellow;
+    	-webkit-transform:rotateY(-0deg);
+    	transform:rotateY(-0deg);
+    }
+    .div3 span{
+    	background-color: blue;
+    	-webkit-transform:rotateX(0deg);
+    	transform:rotateX(0deg);
+    }
+    .div4 span{
+        background-color: blue;
+        -webkit-transform:rotateX(-0deg);
+        transform:rotateX(-0deg);
+    }
+    
+</style>
+</head>
+<body>
+	<div class="box">
+	    <div class="div div1">
+	        <span>前</span>
+	    </div>
+	</div>
+    <div class="box">
+        <div class="div div2">
+            <span>前</span>
+        </div>
+    </div>
+    <div class="box">
+        <div class="div div3">
+            <span>前</span>
+        </div>
+    </div>
+    <div class="box">
+        <div class="div div4">
+            <span>前</span>
+        </div>
+    </div>
+	<script type="text/javascript">
+		
+		window.onload = function(){
+    var divs = document.querySelectorAll('.div');
+    divs.item(0).style.WebkitTransform = "rotateY(60deg)";
+    divs.item(1).style.WebkitTransform = "rotateY(-60deg)";
+    divs.item(2).style.WebkitTransform = "rotateX(60deg)";
+    divs.item(3).style.WebkitTransform = "rotateX(-60deg)";
+};
+	</script>
+</body>
+</html>
+			

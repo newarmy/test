@@ -1,0 +1,81 @@
+<html> 
+   <head>
+    <title>全景图片</title>
+	<style>   
+  *{margin:0;padding:0;}
+  #canvas{margin:100px 0 0 100px}
+  #canvas1{position:absolute;top:0; left:0;}
+  </style>
+   </head> 
+   <body> 
+      <canvas id="canvas" height="200" width="800"> 
+      </canvas> 
+	  <script>
+	  var ctx = document.getElementById('canvas').getContext('2d');
+	  var img = new Image();
+	  img.src="images/Park.jpg";
+	  var canvasXSize = 800;
+	  var canvasYSize = 200;
+	  var speed = 100; //lower is faster
+	  var scale = 1.05;
+	  var y= -4.5; //vertical offset
+	  
+	  // main program
+	  
+	  var dx = 10;//移动距离
+	  var imgW;
+	  var imgH;
+	  var x = 0;
+	  img.onload = function () {
+		imgW = img.width*scale;
+		imgH = img.height*scale;
+		if(imgW > canvasXSize) {
+		// image larger than canvas 	
+			x = canvasXSize - imgW;
+			
+		}
+		if(imgW > canvasXSize) {
+			//
+			clearX = imgW;
+		} else {
+			clearX = canvasXSize;
+		}
+		if(imgH > canvasYSize) {
+			//
+			clearY = imgH;
+		} else {
+			clearY = canvasYSize;
+		}
+		return setInterval(draw, speed);
+	  };
+	  //一帧画两个图像
+	  function draw() {
+		ctx.clearRect(0,0, clearX, clearY);
+		if(imgW <= canvasXSize) {
+			if(x > (canvasXSize)) {
+				x = 0;
+			}
+			if(x > (canvasXSize -imgW)) {
+				ctx.drawImage(img, x-canvasXSize+1,y, imgW,imgH);
+			}
+	
+		} else {
+			console.log(x);
+			if(x > canvasXSize) {
+				x = canvasXSize - imgW;
+			}
+			if(x > (canvasXSize -imgW)) {
+				console.log("x-imgW+1 = "+(x-imgW+1));
+				//画前面部分图像
+				ctx.drawImage(img,x-imgW+1,y,imgW,imgH);
+			}
+		}
+		console.log("x = "+x);
+		//画后面部分图像
+		ctx.drawImage(img,x,y,imgW,imgH);
+		x+=dx;
+	  }
+	   //window.requestAnimationFrame(clock);
+	  </script>
+   </body> 
+ </html>

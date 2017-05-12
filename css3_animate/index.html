@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Swiper demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+    <!-- Link Swiper's CSS -->
+    <link rel="stylesheet" href="css/swiper.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/animate.css">
+    <!-- http://www.swiper.com.cn/demo/tiger/ -->
+    <!-- Demo styles -->
+</head>
+<body>
+    <!-- Swiper -->
+    <div class="swiper-container">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide">
+				<span class="item p1" data-delay="10ms" data-animate ="bounceInLeft" >Slide 1</span>
+			</div>
+            <div class="swiper-slide">
+				<span class="item p2" data-delay="10ms" data-animate ="bounceInDown">Slide 2</span>
+			</div>
+            <div class="swiper-slide">
+				<span class="item p3" data-delay="10ms" data-animate ="zoomIn">Slide 3</span>			
+			</div>
+        </div>
+        <!-- Add Pagination -->
+        <div class="swiper-pagination"></div>
+    </div>
+    <script src="js/zepto.min.js"></script>
+    <script src="js/swiper.min.js"></script>
+    <!-- Initialize Swiper -->
+    <script>
+	var w = window.innerWidth;
+	var h = window.innerHeight;
+	var wr = w/480;
+	var hr = h/640;
+	var doms = document.querySelectorAll('.item');
+	var len = doms.length;
+	var item = null;
+	var cstyle = null;
+	//console.log(wr + '  '+hr);
+	//重新定位 缩放
+	for(var i = 0; i < len; i++) {
+		item = doms.item(i);
+		cstyle = getStyleValue(item);
+		item.style.top = getNumber(cstyle.top)*hr+'px';
+		item.style.left = getNumber(cstyle.left)*wr+ 'px';
+		item.style.height = getNumber(cstyle.height)*hr + 'px';
+		item.style.width = getNumber(cstyle.width)*wr + 'px';
+		item.style.visibility = 'hidden';
+		var initClass1 = item.className;
+		var animateName = item.getAttribute('data-animate');
+		item.setAttribute('data-init-class', initClass1);
+	}
+	//获得数值
+	function getNumber(name) {
+		//console.log(name);
+		//console.log(name.match(/\d+/));
+		return name.match(/\d+/)[0];
+	}
+	//获取dom的样式计算值
+	function getStyleValue (dom) {
+		return window.getComputedStyle(dom,null);
+	}
+	//动画
+	function animate(swiper) {
+		clearAnimate();
+		var items = swiper.querySelectorAll('.item');
+		var item, initClass;
+		for(var i = items.length-1; i >=0; i--) {
+			item = items.item(i);
+			item.style.visibility = 'visible';
+			initClass = item.getAttribute('data-init-class');
+			var animateName = item.getAttribute('data-animate');
+			item.className = initClass+" " + animateName + "   animated";
+		}
+	}
+	//清除动画
+	function clearAnimate() {
+		var item;
+		for(var i = 0; i < len; i++) {
+			item = doms.item(i);
+			item.style.visibility = 'hidden';
+			var initClass = item.getAttribute('data-init-class');
+			 if(initClass) {
+				item.className = initClass;
+			 }
+		}
+	}
+    var swiper = new Swiper('.swiper-container', {
+        pagination: '.swiper-pagination',
+		mousewheelControl: true,
+        direction: 'vertical',
+		onInit: function (swiper) {
+			console.log(swiper.activeIndex);
+			animate(swiper.slides[swiper.activeIndex]);			
+		},
+		onSlideChangeEnd: function (swiper) {
+						console.log(swiper.activeIndex);
+
+			animate(swiper.slides[swiper.activeIndex]);
+		}
+    });
+	
+	
+    </script>
+</body>
+</html>
