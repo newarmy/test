@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<head>
+    <script src="../css3d.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+<img id="mouse" src="images/mouse.jpg"/>
+<script>
+    //创建场景
+    var s = new C3D.Stage();
+    s.size(window.innerWidth, window.innerHeight).material({
+        color: "#cccccc"
+    }).update();
+    document.body.appendChild(s.el);
+   var box = new C3D.Sprite();
+   box.size(window.innerWidth, window.innerHeight);
+   s.addChild(box);
+    //创建1个平面放入场景
+    var p = new C3D.Plane();
+    p.name('ppp').size(300).position(0, 0, -s.fov).rotation(0, 0, 0).material({
+        color: C3D.getRandomColor()
+    }).class('abg').id('bbb').update();
+    box.addChild(p);
+
+
+	//s.addChild(p3);
+    //响应屏幕调整尺寸
+    function resize() {
+        s.size(window.innerWidth, window.innerHeight).update();
+        p.position(0, 0, -s.fov).scale(0.05).rotate(0, 40, 0).update();
+		//box.rotate(0, 18 ,0).update();
+    }
+
+    window.onresize = function () {
+        resize();
+    };
+    resize();
+    var start = Date.now();
+    //刷新场景
+    requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame;
+	
+	var index = 0.05;
+	//var pr = 0;
+	var rotate = 40;
+    function go() {
+		var end = Date.now();
+		if(end - start > 500) {
+			if(index < 1) {
+				index+=0.02;
+				p.scale(index).update();
+				box.rotate(0, 7.2, 0).updateT();
+			}
+			//console.log(index);
+			if(index >= 1) {
+				if(rotate > 0) {
+					rotate -= 5;
+					console.log(rotate);
+					p.rotation(0, rotate, 0).update();
+				}
+			}
+			start = end;
+        }
+		
+
+        requestAnimationFrame(go);
+    }
+
+    requestAnimationFrame(go);
+
+</script>
+</body>

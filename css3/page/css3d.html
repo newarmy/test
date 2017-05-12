@@ -9,7 +9,7 @@
 		.stage{
 			margin:100px auto;
 			height:300px;
-			-webkit-perspective: 1000px;
+			perspective: 800px;
 		}
 		.box {
 			margin: 0 auto;
@@ -17,35 +17,39 @@
 			width:300px;
 			height:300px;
 			-webkit-transform-style:preserve-3d;
-			transition: 1s;
+			transition: 2s;
 		}
 		.box .img{
 			position:absolute;
 			display:block;
 			width:300px;
 			height:300px;
-			-webkit-background-size:contain;
 			transition: 1s;
 		}
 		.box .img1{
 			background: url('./images/1.jpg') no-repeat;
 			-webkit-transform: rotateY(0deg);
+			-webkit-background-size:cover;
 		}
 		.box .img2{
 			background: url('./images/2.jpg') no-repeat;
 			-webkit-transform: rotateY(72deg);
+			-webkit-background-size:cover;
 		}
 		.box .img3{
 			background: url('./images/3.jpg') no-repeat;
 			-webkit-transform: rotateY(144deg);
+			-webkit-background-size:cover;
 		}
 		.box .img4{
 			background: url('./images/4.jpg') no-repeat;
 			-webkit-transform: rotateY(216deg);
+			-webkit-background-size:cover;
 		}
 		.box .img5{
 			background: url('./images/5.jpg') no-repeat;
 			-webkit-transform: rotateY(288deg);
+			-webkit-background-size:cover;
 		}
 	</style>
 </head>
@@ -56,23 +60,22 @@
 			<span class="img img2"></span>
 			<span class="img img3"></span>
 			<span class="img img4"></span>
-			<span class="img img5"></span>
 		</div>
    </div>
 <script>  
 var stage = document.querySelector('.stage');
 	var box = document.querySelector('.box');
 	var imgs = document.querySelectorAll('.img');
-	var z = 150/ Math.tan(Math.PI*36/180);
+	var z = 150/ Math.tan(Math.PI*45/180);
      var len = imgs.length;
 	 for(var i = 0 ; i < len; i++){
-		imgs.item(i).style.transform = 'rotateY('+(i+1)*72+'deg) translateZ('+z+'px)';
+		imgs.item(i).style.transform = 'rotateY('+i*90+'deg) translateZ('+z+'px)';
 	 }
 	 rotate = 0;
 	 box.addEventListener('click', function() {
 		rotate +=72;
-		box.style.transform = 'rotateY('+rotate+'deg)';
+		box.style.transform = 'translateZ(700px) rotateY(-'+rotate+'deg)';
 	 });
-	stage.style.perspective = z+'px';
+	//stage.style.transform = 'translateZ(840px)';
 </script>
 </html>

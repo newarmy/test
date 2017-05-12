@@ -453,13 +453,16 @@
         },
 
         updateO: function () {
+            console.log(this.originX);
             if (typeof(this.originX) == 'number') {
                 var _x = fixed0(this.originX - this.__orgF.x);
                 this.__orgO.x = _x + 'px';
                 this.__orgT.x = -_x + 'px';
+                console.log(this.__orgF.x +" "+ _x);
             } else {
                 this.__orgO.x = this.originX;
                 this.__orgT.x = '-' + this.originX;
+                console.log('x = '+this.__orgO.x);
             }
 
             if (typeof(this.originY) == 'number') {
@@ -475,6 +478,7 @@
                 var _z = fixed0(this.originZ - this.__orgF.z);
                 this.__orgO.z = _z + 'px';
                 this.__orgT.z = -_z + 'px';
+                 console.log(this.__orgF.z +" "+ _z);
             } else {
                 this.__orgO.z = this.__orgT.z = '0px';
             }
@@ -488,6 +492,7 @@
             var _S0 = this.__sort[0];
             var _S1 = this.__sort[1];
             var _S2 = this.__sort[2];
+            console.log(this.__orgT.x, this.__orgT.y, this.__orgT.z, this.x, this.y, this.z);
             this.el.style[prefix + 'Transform'] = 'translate3d(' + this.__orgT.x + ', ' + this.__orgT.y + ', ' + this.__orgT.z + ') ' + 'translate3d(' + fixed2(this.x) + 'px,' + fixed2(this.y) + 'px,' + fixed2(this.z) + 'px) ' + 'rotate' + _S0 + '(' + fixed2(this['rotation' + _S0]) % 360 + 'deg) ' + 'rotate' + _S1 + '(' + fixed2(this['rotation' + _S1]) % 360 + 'deg) ' + 'rotate' + _S2 + '(' + fixed2(this['rotation' + _S2]) % 360 + 'deg) ' + 'scale3d(' + fixed2(this.scaleX) + ', ' + fixed2(this.scaleY) + ', ' + fixed2(this.scaleZ) + ') ';
             return this;
         },
