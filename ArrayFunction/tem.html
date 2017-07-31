@@ -18,11 +18,48 @@
 </div>
 <div id="filter">
 </div>
-<script src="template.js"></script>
 <script>
+
+
+var template = {
+	startTag: "<%",
+	endTag: "%>",
+	parse: function (str) {
+		var reg = /^=(.+)/;//来判断是变量还是语句
+		var startArr = str.split(this.startTag);//开始标识符分割的数组
+		var endArr;//结束标识符分割的数组
+		var variable;
+		var varArr;//
+		var html = 'var data = arguments[0]; var str=""; with(data){';
+		var temp;
+		for(var i = 0, l = startArr.length; i < l; i++) {
+			temp = startArr[i];
+			var endArr = temp.split(this.endTag);
+			if(endArr.length == 1) {//纯字符串
+				html+='str+=\''+endArr[0]+'\';';
+			} else {//有变量或语句
+				var variable = endArr[0];
+				var varArr = variable.match(reg);
+				if(varArr && varArr.length==2) {//是变量
+					
+					html +='str+='+ varArr[1]+';'; 
+					html += 'str+=\''+endArr[1]+'\';';
+				} else {
+					html += endArr[0];//是语句
+					html += 'str+=\''+endArr[1]+'\';';
+				}
+			}
+		}
+		html+='} return str;';
+		//console.log(html);
+		return new Function( html);
+	}
+};
+
 var dd = '<ul><%for(var i = 0, len = list.length; i < len; i++){%><li><%=list[i].name%></li><%}%></ul>';
-var t = template(dd, {list: [{name: 'name1'}, {name: 'name3'}, {name: 'name2'}]});
-document.getElementById('map').innerHTML = t;
+var func = template.parse(dd);
+var html = func({list: [{name: 'name1'}, {name: 'name3'}, {name: 'name2'}]});
+document.getElementById('map').innerHTML = html;
 </script>
 
 
