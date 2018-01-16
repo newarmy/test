@@ -1,0 +1,303 @@
+<html>
+<head>
+    <title>WebGL 第14课，透明混色</title>
+    <meta charset="utf-8" />
+    <script src="../common/matrix.js" type="text/javascript"></script>
+    <script src="../common/lib.js" type="text/javascript"></script>
+    <!--  顶点着色器的处理
+
+    纹理参数可以分为两大种类，
+第一种，是和质量或者叫品质相关的参数，改变这个参数的话，渲染的过滤方式会发生变化，所以采用完美补间的纹理，就可能会得到高质量的渲染效果了。
+第二种，就是纹理的特征了。具体一点来说，通常指定了超出范围的纹理坐标的话，纹理是会发生变化的。一般来说，纹理坐标的范围应该设定在0-1之间，而实际上，即使指定了范围外的纹理坐标也是可以进行渲染的。但是，如果指定了纹理参数，那么这个范围外的值，也就决定了具体的含义。
+那么，接下来就来看看纹理参数的设定方法以及会有怎样的渲染效果吧。
+
+
+
+
+
+
+  -->
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec3 position;
+        attribute vec4 color;
+        attribute vec2 textureCoord;
+        uniform   mat4 mvpMatrix;
+        uniform  float vertexAlpha;
+        varying   vec4 vColor;
+        varying  vec2 vTextureCoord;
+
+        void main(void){
+            vTextureCoord = textureCoord;
+            vColor = vec4(color.rgb, color.a * vertexAlpha);
+            gl_Position = mvpMatrix *vec4(position, 1.0);
+        }
+    </script>
+    <!-- 片段着色器的处理
+     指定精确度的precision
+
+     lowp   ：精确度低
+     mediump：精确度中
+     highp  ：精确度高
+     sampler2D的变量类型，就是采样的意思
+     texture2D函数，这个函数有两个参数，第一个参数是采样型的纹理数据，第二个参数是表示纹理坐标的vec型的数据。
+     用texture2D函数获取到纹理的颜色信息之后，再和顶点颜色（varying变量vColor）相乘，就得到最终的颜色了
+    -->
+    <script id="fs" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform int useTexture;
+        uniform sampler2D texture0;
+        varying vec2 vTextureCoord;
+        varying vec4 vColor;
+        void main(void){
+             vec4 destColor = vec4(0.0);
+            if(bool(useTexture)) {
+                vec4 smpColor0 = texture2D(texture0, vTextureCoord);
+                 destColor = vColor * smpColor0;
+            } else {
+               destColor = vColor;
+            }
+            gl_FragColor = destColor;
+
+
+        }
+     </script>
+</head>
+<body>
+<canvas id="canvas" width="600" height="600"></canvas>
+<p>
+    <input id="transparency" name="blend" type="radio" checked> transparency
+    <input id="add" name="blend" type="radio"> add
+</p>
+<p>
+    <input id="range" type="range" min="0" max="100" value="70"> vertex alpha value (0% - 100%)
+</p>
+<script>
+    var elmTransparency = document.getElementById('transparency');
+    var elmAdd          = document.getElementById('add');
+    var elmRange        = document.getElementById('range');
+    function createTexture(gl, source, callback) {
+        var img = new Image();
+
+        img.onload = function () {
+
+            var tex = gl.createTexture();
+
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+            /*
+             * 为了生成纹理映射，使用了generateMipmap函数。
+             纹理映射是一个提前准备一些不同大小的图片数据的组织，不光是在WebGL中，在所有的3D编程中都有这个概念。纹理映射，
+             准备一个纹理使用的场景，在纹理图像需要缩小显示的时候能够发挥很大的作用，因为缩小后的图像数据已经在内部提前准备好，
+             然后进行适当的切换渲染，所以即使把图像缩的再小，也能渲染的很漂亮。
+             * */
+            gl.generateMipmap(gl.TEXTURE_2D);
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+
+            callback(tex);
+        }
+
+        img.src = source;
+    }
+
+    //混合处理
+    function blend_type(gl, prm){
+        switch(prm){
+            // 透過処理
+            case 0:
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                break;
+            // 加算合成
+            case 1:
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    function init() {
+        var cdom = g('#canvas');
+        var gl = getCtx(cdom);
+        if(!gl) {
+            alert('不支持webgl');
+            return;
+        }
+        // 设定canvas初始化的颜色, 用于设置清空颜色缓冲时的颜色
+        // param: (red, green, blue, alpha)
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        // 设定canvas初始化时候的深度
+        gl.clearDepth(1.0);
+
+        // canvas的初始化 使用预设值来清空缓冲
+        gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
+        // 顶点着色器和片段着色器的生成
+        var v_shader = createShader(gl, 'vs');
+        var f_shader = createShader(gl, 'fs');
+
+        // 程序对象的生成和连接
+        var program = createProgram(gl, v_shader, f_shader);
+
+        // 从数组中存放 获取的attributeLocation
+        var attrLocation = [];
+        attrLocation[0] = gl.getAttribLocation(program, 'position');
+        attrLocation[1] = gl.getAttribLocation(program, 'color');
+        attrLocation[2] = gl.getAttribLocation(program, 'textureCoord');
+        // attribute的元素数量
+        var attrStride = [3, 4, 2];
+
+
+        // 模型（顶点）数据
+        var vertex_position =[
+            -1.0,  1.0,  0.0,
+            1.0,  1.0,  0.0,
+            -1.0, -1.0,  0.0,
+            1.0, -1.0,  0.0
+        ];
+
+
+        // 保存顶点的颜色情报的数组
+        var vertex_color = [
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0
+        ];
+
+        // 纹理坐标
+        var textureCoord = [
+            0.0, 0.0,
+            1.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0
+
+        ];
+
+        // 保存顶点的索引的数组
+        var index = [
+            0, 1, 2,
+            3, 2, 1
+        ];
+
+        // 生成VBO  (顶点缓存对象)
+        var position_vbo = createVBD(gl, vertex_position);
+        var color_vbo = createVBD(gl, vertex_color);
+        var texture_vbo = createVBD(gl, textureCoord);
+
+
+        // 生成IBO  (索引缓存对象)
+        var ibo = createIBD(gl, index);
+
+        // uniform Location的获取
+        var uniLocation = [];
+        uniLocation[0] = gl.getUniformLocation(program, 'mvpMatrix');
+        uniLocation[1] = gl.getUniformLocation(program, 'texture0');
+        uniLocation[2] = gl.getUniformLocation(program, 'vertexAlpha');
+        uniLocation[3] = gl.getUniformLocation(program, 'useTexture')
+        var m = new matIV();
+        // 各种矩阵的生成和初始化
+        var mMatrix = m.identity(m.create());
+        var vMatrix = m.identity(m.create());
+        var pMatrix = m.identity(m.create());
+        var tmpMatrix = m.identity(m.create());
+        var mvpMatrix = m.identity(m.create());
+
+
+        // 视图变换坐标矩阵
+        m.lookAt([0.0, 0.0, 10.0], [0,0,0], [0,1,0], vMatrix);
+        // 投影坐标变换矩阵
+        m.perspective(45, cdom.width/cdom.height, 0.1, 100, pMatrix);
+        // 视图x投影坐标变换矩阵
+        m.multiply(pMatrix, vMatrix, tmpMatrix);
+
+
+        var count = 0;
+
+
+
+        //gl.enable(gl.CULL_FACE);
+        gl.enable(gl.DEPTH_TEST);
+
+        function run () {
+            // canvas 初始化
+            gl.clearColor(0.0, 0.75, 0.75, 1.0);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            if(elmTransparency.checked){blend_type(gl, 0);}
+            if(elmAdd.checked){blend_type(gl, 1);}
+            var vertexAlpha = parseFloat(elmRange.value / 100);
+            //
+            count++;
+
+            // compute 角度
+            var rad = (count%360)*Math.PI/180;
+            var x = Math.cos(rad);
+            var y = Math.sin(rad);
+            // 将VBO进行绑定并添加  (位置情报和 颜色情报等)
+            setAttribute(gl, [position_vbo, color_vbo, texture_vbo], attrLocation, attrStride);
+
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            //向着色器中传入纹理数据
+            gl.uniform1i(uniLocation[1], 0);
+            m.identity(mMatrix);
+            m.translate(mMatrix, [0.25, 0.25, -0.25], mMatrix);
+            //绕x轴旋转
+            m.rotate(mMatrix, rad, [0, 1, 0], mMatrix)
+            //完成模型1的坐标变换矩阵，并进行绘图
+            m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+            // 设置混色无效
+            gl.disable(gl.BLEND);
+            gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+            gl.uniform1f(uniLocation[2], vertexAlpha);
+            gl.uniform1i(uniLocation[3], true);
+              //  IBO进行绑定并添加
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+
+
+
+            m.identity(mMatrix);
+            m.translate(mMatrix, [-0.25, -0.25, 0.25], mMatrix);
+            //绕x轴旋转
+            m.rotate(mMatrix, rad, [0, 0, 1], mMatrix)
+            //完成模型1的坐标变换矩阵，并进行绘图
+            m.multiply(tmpMatrix, mMatrix, mvpMatrix);
+            // 设置混色无效
+            gl.enable(gl.BLEND);
+            //解除绑定
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.uniformMatrix4fv(uniLocation[0], false, mvpMatrix);
+            gl.uniform1i(uniLocation[1], 0);
+            gl.uniform1f(uniLocation[2], vertexAlpha);
+            gl.uniform1i(uniLocation[3], false);
+            //  IBO进行绑定并添加
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
+
+
+            gl.flush();
+        }
+        //设置纹理有效
+        var texture = null;
+        var texture1 = null;
+        var imgloadIndex = 0;
+        createTexture(gl, 'texture.png', function (tex) {
+           texture = tex;
+           //alert(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+            imgloadIndex ++;
+            if(imgloadIndex === 1) {
+                setInterval(run, 1000/30);
+            }
+
+        });
+
+
+    }
+
+    init();
+</script>
+</body>
+</html>
