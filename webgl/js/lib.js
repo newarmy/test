@@ -19,7 +19,6 @@ function g(selector){
 function getCtx(canvas){
 	var gl = null;
 	try{
-	
 		gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 	}catch(e) {
 	}
@@ -27,4 +26,5 @@ function getCtx(canvas){
 		gl = null;
 	}
 	return gl;
+
 }
