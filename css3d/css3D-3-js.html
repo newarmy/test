@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN" style="font-size:50px;">
+<head >
+	<title>css 3d 模型</title>
+	<meta charset="UTF-8">
+	<meta id="vp" name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<meta name="apple-touch-fullscreen" content="YES" />
+	<meta name="HandheldFriendly" content="true">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no">
+	<style>
+	   .camera {
+	   width: 400px; 
+	   height: 400px;
+	   perspective: 1000px;
+	   perspective-origin: center center; 
+	   /*
+	   perspective-origin指摄像机的中心点位置，
+	   默认值是center center(或50% 50%)。换句话说，作为摄像机镜头的三个维度，
+	   perspective-origin代表了X和Y轴，而perspective代表Z轴。摄像机在三维空间进行移动
+
+	   */
+	   }
+       .stage { 
+	      width:100%;
+		  height:100%; 
+		  border:2px dashed #000; 
+		  transform: rotateY(30deg) rotateX(20deg);
+		  transform-style:preserve-3d; 
+		  }
+       
+	</style>
+</head>
+<body>
+   <!-- 
+   在没有设置box的rotate、translateZ的情形下，box的深度没有变化，
+   导致摄像机Camera透过perspective看出去的位置都是相同的
+   
+   
+   在进行旋转的时候，物体的坐标系也是跟着旋转的，
+   所以先平移再旋转和先旋转再平移的效果是不一样的！
+   这时候一定要分清楚当前坐标系！
+
+     -->
+   <div class="camera">
+       <div id="stage" class="stage">
+		 
+	   </div>
+   </div>
+   <script>
+    class Cube {
+	   constructor (id, l, w, h, x, y, z) {
+	      this.id = id; // ID
+		  this.l = l;// 长
+		  this.w = w;// 宽
+		  this.h = h;// 高
+		  this.x = x; //x坐标
+		  this.y = y; // y坐标
+		  this.z = z; // z坐标
+		  
+		  this._create();
+	   }
+	   _create() {
+	     this.cube = document.createElement('div');
+		 this.faces = new Array(6);
+		 
+		 for(let i = 0; i < this.faces.length; i++) {
+		   this.faces[i] = document.createElement('div');
+		   this.faces[i].id = `${this.id}-face-${i}`;
+		   this.faces[i].style.position = 'absolute';
+		   console.log(Math.round((1<<24)*Math.random()).toString(16));
+		   this.faces[i].style.backgroundColor = "#"+Math.round((1<<24)*Math.random()).toString(16);
+		   this.cube.appendChild(this.faces[i]);
+		 }
+		 this._setCubeStyle();
+		 this._setFrontFace();
+		 this._setBackFace();
+		 this._setLeftFace();
+		 this._setRightFace();
+		 this._setUpFace();
+		 this._setBottomFace();
+	   }
+	   _setCubeStyle() {
+	     let style = {
+			'display': 'flex',
+			'justify-content': 'center',
+			'align-items': 'center',
+			'transform-style': 'preserve-3d',
+			'transform': `translateX(${this.x}px) translateY(${this.y}px) translateZ(${this.z}px)`
+		 };
+		 Object.assign(this.cube.style, style);
+	   }
+	   _setFrontFace() {
+	     let style = {
+		   'width': this.l + 'px',
+		   'height': this.h +'px',
+		   'transform': `translateZ(${this.w/2}px)`
+		 }
+		 Object.assign(this.faces[0].style, style);
+	   }
+	   _setBackFace() {
+	      let style = {
+		    'width': this.l + 'px',
+			'height': this.h + "px",
+			'transform': `rotateY(180deg) translateZ(${this.w/2}px)`
+		  }
+		  Object.assign(this.faces[1].style, style);
+	   }
+	   _setLeftFace() {
+	       let style = {
+		    'width': this.w + 'px',
+			'height': this.h + "px",
+			'transform': `rotateY(-90deg) translateZ(${this.l/2}px)`
+		  }
+		  Object.assign(this.faces[2].style, style);
+	   }
+	   _setRightFace() {
+	      let style = {
+		    'width': this.w + 'px',
+			'height': this.h + "px",
+			'transform': `rotateY(90deg) translateZ(${this.l/2}px)`
+		  }
+		  Object.assign(this.faces[3].style, style);
+	   }
+	   _setUpFace() {
+	      let style = {
+		    'width': this.l + 'px',
+			'height': this.w + "px",
+			'transform': `rotateX(90deg) translateZ(${this.h/2}px)`
+		  }
+		  Object.assign(this.faces[4].style, style);
+	   }
+	   _setBottomFace() {
+	      let style = {
+		    'width': this.l + 'px',
+			'height': this.w + "px",
+			'transform': `rotateX(-90deg) translateZ(${this.h/2}px)`
+		  }
+		  Object.assign(this.faces[4].style, style);
+	   }
+	}
+	
+	let c1 = new Cube('c1', 20, 30, 40, 0, 100, 0); 
+	let c2 = new Cube('c1', 10, 20, 30, 0, 200, 0); 
+	let c3 = new Cube('c1', 20, 20, 50, 0, 250, 0); 
+	let c4 = new Cube('c1', 50, 50, 50, 0, 320, 0);
+	let $stage = document.getElementById('stage');
+	$stage.appendChild(c1.cube)
+	$stage.appendChild(c2.cube)
+	$stage.appendChild(c3.cube)
+	$stage.appendChild(c4.cube)
+
+   </script>
+</body>
+</html>

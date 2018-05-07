@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN" style="font-size:50px;">
+<head >
+	<title>css 3d 模型-圆柱</title>
+	<meta charset="UTF-8">
+	<meta id="vp" name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<meta name="apple-touch-fullscreen" content="YES" />
+	<meta name="HandheldFriendly" content="true">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no">
+	<!--
+	 css3d重要提示：
+     1. 元素设置了rotate(X, Z, Y) translateZ后，才会有3d效果。
+	 2. 元素进行旋转的时候，元素的坐标系也是跟着旋转的
+	 3. rotateX、rotateZ的旋转正方向是顺时针，rotateY的旋转正方向是逆时针。
+	 4. perspective-origin代表了X和Y轴，而perspective代表Z轴。摄像机在三维空间进行移动
+	 5. transform-style: preserve-3d， 规定其所有的子元素在同一个3D空间中显示
+	 6. css3d结构
+	     <div class="camera">               设置 perspective-origin perspective
+		    <div id="stage" class="stage">  设置 transform-style: preserve-3d
+			    <div class="box"></div>     设置 rotate translate等
+		    </div>
+	     </div>
+   -->
+	<style>
+	   .camera {
+	   width: 400px; 
+	   height: 400px;
+	   perspective: 1000px;
+	   perspective-origin: center center; 
+	   /*
+	    perspective-origin指摄像机的中心点位置，
+	    默认值是center center(或50% 50%)。换句话说，作为摄像机镜头的三个维度，
+	    perspective-origin代表了X和Y轴，而perspective代表Z轴。摄像机在三维空间进行移动
+
+	   */
+	   }
+       .stage { 
+	      width:100%;
+		  height:100%; 
+		  border:2px dashed #000; 
+		  transform: rotateY(0deg) rotateX(0deg);
+		  transform-style:preserve-3d; 
+		  }
+       
+	</style>
+</head>
+<body>
+
+   <!-- 
+   在没有设置box的rotate、translateZ的情形下，box的深度没有变化，
+   导致摄像机Camera透过perspective看出去的位置都是相同的
+   
+   
+   在进行旋转的时候，物体的坐标系也是跟着旋转的，
+   所以先平移再旋转和先旋转再平移的效果是不一样的！
+   这时候一定要分清楚当前坐标系！
+
+     -->
+   <div class="camera">
+       <div id="stage" class="stage">
+		 
+	   </div>
+   </div>
+   <script>
+    class Cylinder {
+	   constructor (id, w, h) {
+	      this.id = id; // ID
+		  this.h = h;// 高
+		  this.w = w;// 宽
+		  this.x = 50;
+		  this.y = 200;
+		  this.z = 950;
+		  this._create();
+	   }
+	   _create() {
+	     this.cylinder = document.createElement('div');
+		 this.faces = new Array(12);
+		 this.eachAngle = 360/12;
+		 var hd = (Math.PI - this.eachAngle/180*Math.PI)/2;
+		 var z = this.w/2*Math.tan(hd);
+		 
+		 for(let i = 0; i < this.faces.length; i++) {
+		   this.faces[i] = document.createElement('div');
+		   this.faces[i].id = `${this.id}-face-${i}`;
+		   this.faces[i].style.position = 'absolute';
+		   this.faces[i].style.width = this.w+"px";
+		    this.faces[i].style.height = this.h+"px";
+		   console.log(Math.round((1<<24)*Math.random()).toString(16));
+		   this.faces[i].style.backgroundColor = "#"+Math.round((1<<24)*Math.random()).toString(16);
+		   
+		   this.faces[i].style.transform = "rotateY(-"+i*this.eachAngle+"deg) translateZ("+z+"px)";
+		   this.cylinder.appendChild(this.faces[i]);
+		 }
+		 this._setCubeStyle();
+	   }
+	   
+	   _setCubeStyle() {
+	     let style = {
+			'display': 'flex',
+			'justify-content': 'center',
+			'align-items': 'center',
+			'transform-style': 'preserve-3d',
+			'transform': `translateX(${this.x}px) translateY(${this.y}px) translateZ(${this.z}px) rotateY(0DEG)`
+		 };
+		 Object.assign(this.cylinder.style, style);
+	   }
+	  
+	}
+	
+	let c1 = new Cylinder('c1', 100, 200); 
+	
+	let $stage = document.getElementById('stage');
+	$stage.appendChild(c1.cylinder)
+
+
+   </script>
+</body>
+</html>
