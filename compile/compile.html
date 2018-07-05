@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>virtual dom compile</title>
+</head>
+  
+<body>
+<div id="root"></div>
+
+<script>
+  /**
+  
+	{
+		tagName: '',
+		attr: [
+			{id: 'dd'},
+			{class: 'style'}
+		],
+		events: {
+			click: click
+		},
+		children: [
+			{
+				tagName: 'span',
+				text: '{{a}}',
+			},
+			{
+				tagName: 'span',
+				text: '{{b}}',
+			}
+		]
+	}
+  */
+  
+  
+ var tokenTypes = {
+	tagOpenStart: 1,
+	tagOpenEnd: 2,
+	attrName: 3,
+	attrEqual: 4,
+	attrValue: 5,
+	eventName: 6,
+	eventValue: 7,
+	tagClose:8,
+	text: 10,
+	eof: 11
+ };
+ 
+ 
+ // 词法分析
+ var TokenClass = function (input) {
+	this.input = input;
+	this.index = 0;
+	this.eof = false;
+	this.content = null;
+ }
+ var tp = TokenClass.prototype;
+ tp.char = function() {
+    return this.input[this.index];
+ };
+ tp.setContext = function (type) {
+	this.context = type;
+ };
+ tp.inContext = function (type) {
+	return this.context === type;
+ };
+ tp.eatSpaces = function () {
+	while(/\s/.test(this.char())) {
+		this.index ++;
+	}
+ };
+ 
+ tp.nextToken = function () {
+	this.eatSpaces();
+	return (
+		this.readTagOpenStart() ||
+		this.readTagOpenEnd() ||
+		this.readAttrName() ||
+		this.readAttrEqual() ||
+		this.readAttrValue() ||
+		//this.readEventName() ||
+		//this.readEventValue() ||
+		this.readTagClose() ||
+		this.readText() ||
+		this.readEOF() ||
+		this.error()
+	);
+ };
+ 
+
+ 
+ 
+ tp.peekToken = function () {
+	var index = this.index;
+	var token = this.nextToken();
+	//this.index = index;
+	return token;
+ };
+ 
+ tp.readTagOpenStart = function () {
+	if(this.char() === '<') {
+	   this.index++;
+	   if(this.char() === '/') {
+	      this.index --;
+		  return ;
+	   }
+	   this.eatSpaces();
+	   var start = this.index;
+	   var tagReg = /[\w\d]/;
+	   while(this.char().match(tagReg)) {
+		 this.index++;
+	   }
+	   
+	   var tagName = this.input.slice(start, this.index);
+	   this.setContext(tokenTypes.tagOpenStart);
+	   return {
+		type: tokenTypes.tagOpenStart,
+		label: tagName
+	   }
+	}
+ };
+  tp.readText = function () {
+    // console.log('text = '+ this.char());
+	if(this.inContext(tokenTypes.tagOpenEnd) && (this.char() !== '<')) {
+		 var start = this.index
+		 if (!this.char()) return
+		 this.index++;
+		 while(this.char() && !(/[\<\/\>]/.test(this.char()))) {
+			this.index ++;
+		 }
+		 // console.log(this.index + ' = ' +this.char());
+		return {
+			type: tokenTypes.text,
+			label: this.input.slice(start, this.index)
+		}
+	}
+ };
+ tp.readTagOpenEnd = function () {
+	if(this.inContext(tokenTypes.tagOpenStart) && this.char() === '>') {
+		this.setContext(tokenTypes.tagOpenEnd);
+		this.index++;
+		return {
+			type: tokenTypes.tagOpenEnd,
+			label: '>'
+		}
+	}
+ };
+ 
+ tp.readAttrName = function() {
+	if(this.inContext(tokenTypes.tagOpenStart) && this.char()) {
+		var attrReg = /[\w-\d:]/;
+		//console.log("readAttrName = "+this.char());
+		if(!attrReg.test(this.char())) return ;
+		//console.log("readAttrName2 = "+this.char());
+		var start = this.index;
+		
+		while ( this.char() && attrReg.test(this.char())) {
+		   this.index ++;
+		}
+		return {
+			type: tokenTypes.attrName,
+			label: this.input.slice(start, this.index)
+		}
+	}
+ };
+  tp.readAttrEqual = function() {
+	if(this.inContext(tokenTypes.tagOpenStart) && this.char() === '=') {
+		this.index++;
+		
+		return {
+			type: tokenTypes.attrEqual,
+			label: '='
+		}
+	}
+ };
+  tp.readAttrValue = function() {
+	if(this.inContext(tokenTypes.tagOpenStart) && this.char() === '"') {
+		
+		var quote = this.char();
+		var start = this.index;
+		
+		this.index ++;
+		while ( this.char() && this.char() !== quote) {
+		   this.index ++;
+		}
+		this.index ++;
+		return {
+			type: tokenTypes.attrValue,
+			label: this.input.slice(start+1, this.index-1)
+		}
+	}
+ };
+ 
+ tp.readTagClose = function () {
+	if( (this.inContext(tokenTypes.tagOpenEnd) || this.inContext(tokenTypes.tagClose)) && this.char() === '<') {
+	console.log("tagClose = "+this.char());
+		this.index++;
+		if(this.char() === '/') {
+			this.index++;
+			var start = this.index;
+			while ( this.char() && /[\w-\d]/.test(this.char())) {
+			   this.index ++;
+			}
+			
+			if(this.char() === '>') {
+			    this.setContext(tokenTypes.tagClose);
+				this.index ++;
+				return {
+					type: tokenTypes.tagClose,
+					label: '</'+this.input.slice(start, this.index-1)+'>'
+				}
+			}
+			
+		}
+	}
+ };
+ tp.readEOF = function () {
+  if (this.index >= this.input.length) {
+    this.eof = true
+    return {
+      type: tokenTypes.eof,
+      label: '$'
+    }
+  }
+};
+tp.error = function () {
+  throw new Error('Unexpected token: \'' + this.char() + '\'')
+};
+
+ // 语法分析
+ function parse(input) {
+    this.input = input;
+	this.tokenObj = new TokenClass(input);
+	this.arr = [];
+	this.index = 0;
+	this.len = 0;
+	this.tree = null;
+	this.attr = [];
+	this.tag = {};
+	this.tags = [];
+	this.lastToken = null;
+	this.parseToken();
+	this.parseRoot();
+ }
+ pp = parse.prototype;
+ 
+ // 去词法分析
+ pp.parseToken = function() {
+	while(this.tokenObj.index < this.input.length) {
+		this.arr.push(this.tokenObj.peekToken());
+	}
+ };
+ // 去语法分析
+ pp.parseRoot = function () {
+	this.len = this.arr.length;
+	while(this.index < this.len) {
+		this.startParse(this.arr[this.index]);
+		this.index ++;
+	}
+ };
+ pp.startParse = function (obj) {
+	switch(obj.type) {
+		case 1:
+		    this.parseTagName(obj.label);
+			this.lastToken = 1;
+			break;
+		case 3:
+			this.parseAttr(obj.label);
+			this.lastToken = 3;
+			break;
+		case 2:
+		    this.parseTagOpenEnd();
+			 this.lastToken = 2;
+			 break;
+		case 8:
+		    this.parseTagClose();
+			 this.lastToken = 8;
+			 break;
+		case 10:
+		    this.parseText(obj.label);
+			this.lastToken = 8;
+			break;
+	}
+ };
+ // 解析tagName
+ pp.parseTagName = function (label) {
+	this.tag = Object.create(null);
+    if(this.lastToken && this.lastToken === 2) {
+	    this.tag.relative = 'child'; // 与前一个节点对象的关系
+	} else if(this.lastToken && this.lastToken === 8) {
+		this.tag.relative = 'sibling';// 与前一个节点对象的关系
+	} else {
+		this.tag.relative = 'null'; // 跟节点
+		this.tree = this.tag;
+	}
+	this.tag.tagName = label;
+ };
+  // 解析属性
+ pp.parseAttr = function (label) {
+	var obj = {};
+	this.index++;
+	this.index++;
+	var v = this.arr[this.index].label;
+	obj[label] = v;
+	this.attr.push(obj);
+ };
+   // 解析TagOpenEnd
+ pp.parseTagOpenEnd = function () {
+	this.tag.attr = this.attr;
+	this.attr = [];
+	switch(this.tag.relative) {
+		case 'child':
+			var parent = this.tags[this.tags.length-1];
+			if(parent.children) {
+				parent.children.push(this.tag);
+			} else{
+				parent.children = [this.tag];
+			}
+			this.tag.parent = parent;
+			delete this.tag.relative;
+			break;
+		case 'sibling':
+			var lastTag = this.tags[this.tags.length-1];
+			if(lastTag.parent.children) {
+				lastTag.parent.children.push(this.tag);
+			} else{
+				lastTag.parent.children = [this.tag];
+			}
+			delete this.tag.relative;
+			this.tag.parent = lastTag.parent;
+			break;
+		case 'null':
+			this.tree = this.tag;
+			delete this.tag.relative;
+			break;
+	}
+	this.tags.push(this.tag);
+ };
+ pp.parseTagClose = function () {
+	
+ };
+  // 解析文本
+ pp.parseText = function(label) {
+    this.tag.text = label;
+ };
+
+
+
+//------------------代码生成-----------------------------
+
+function codeGen(dom, input, data) {
+	this.dom = dom;
+	this.parse = new parse(input);
+	this.tree = this.parse.tree;
+	this.data = data;
+	
+}
+cp = codeGen.prototype;
+
+// 模板替换
+cp.replace = function () {
+	var tree = this.tree;
+	var reg = /\{\{([\w-\d]+)\}\}/;
+	   for(var k in tree) {
+	       if(k === 'parent') {
+			continue;
+		   }
+		   let v = tree[k]; 
+		   if(typeof v === 'object') {
+				this.replaceChild(v);
+		   } else {
+				if(v.indexOf('{') > -1) {
+					var res = v.match(reg);
+					v = v.replace(reg, this.data[res[1]]);
+					tree[k] = v;
+			    }
+		   }
+		   
+	   }
+	   
+	   this.tree = tree;
+	   console.log(this.tree);
+};
+cp.replaceChild = function (obj) {
+    var reg = /\{\{([\w-\d]+)\}\}/;
+	if(obj.length) {
+		for(var i = 0 ; i < obj.length; i++) {
+			var temp = obj[i];
+			for(var k in temp){
+				if(k === 'parent') {
+				continue;
+			   }
+			   let v = temp[k]; 
+			   if(typeof v === 'object') {
+					this.replaceChild(v);
+			   } else {
+					if(v.indexOf('{') > -1) {
+						var res = v.match(reg);
+						v = v.replace(reg, this.data[res[1]]);
+						temp[k] = v;
+					}
+			   }
+			}
+		}
+	} else {
+		for(var k in obj){
+			if(k === 'parent') {
+			continue;
+		   }
+		   let v = obj[k]; 
+		   if(typeof v === 'object') {
+				this.replaceChild(v);
+		   } else {
+				if(v.indexOf('{') > -1) {
+					var res = v.match(reg);
+					v = v.replace(reg, this.data[res[1]]);
+					obj[k] = v;
+			    }
+		   }
+		}
+	}
+};
+
+//生成dom
+cp.genCode = function () {
+
+     var root = null;
+	 for(var k in this.tree) {
+	      switch(k) {
+		      case 'tagName':
+			      root = document.createElement(this.tree[k]);    
+			      break;
+			  case 'attr':
+				for(var i = 0, len = this.tree[k].length; i < len; i++) {
+					var temp = this.tree[k][i];
+					for(var n in temp) {
+						root.setAttribute(n, temp[n]);
+					}
+				}
+				break;
+			  case 'text':
+					root.innerHTML = this.tree[k];
+					break;
+			  case 'children':
+			     genChild(root, this.tree[k]);
+				break;
+		  }
+	   }
+	   
+	   if(this.dom) {
+		  this.dom.appendChild(root);
+	   }
+};
+
+var genChild = function (parent, list) {
+    for(var x = 0, len1 = list.length; x < len1; x++) {
+	 var child = list[x];
+     var dom = null;
+	 for(var k in child) {
+	      switch(k) {
+		      case 'tagName':
+			      dom = document.createElement(child[k]);    
+			      break;
+			  case 'attr':
+				for(var i = 0, len = child[k].length; i < len; i++) {
+					var temp = child[k][i];
+					for(var n in temp) {
+						dom.setAttribute(n, temp[n]);
+					}
+				}
+				break;
+			  case 'text':
+					dom.innerHTML = child[k];
+					break;
+			  case 'children':
+			    genChild(dom, child[k]);
+				break;
+		  }
+	   }
+	   parent.appendChild(dom);
+	}
+};
+
+ var tpl = `
+    <div id="id" class="{{style}}" x-on:click="click">
+	   <span>{{a}} </span>
+	   <span>{{b}} </span>
+	   <ul>
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+	   </ul>
+	</div> 
+  `;
+  
+  
+ //词法分析
+ var dd = new codeGen(document.getElementById('root'), tpl, {
+	a: 'dong',
+	b: 'xinjun',
+	style: 'bb'
+ });
+dd.replace();
+dd.genCode();
+</script>
+</body>
+</html>
