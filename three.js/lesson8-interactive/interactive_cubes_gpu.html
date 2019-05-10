@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - interactive cubes (gpu)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+        .info {
+            position: absolute;
+            background-color: black;
+            opacity: 0.8;
+            color: white;
+            text-align: center;
+            top: 0px;
+            width: 100%;
+        }
+        .info a {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="info">
+    <a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - gpu picking
+</div>
+
+<div id="container"></div>
+
+<script src="../js/three.js"></script>
+
+<script src="../js/controls/TrackballControls.js"></script>
+<script src="../js/utils/BufferGeometryUtils.js"></script>
+<script src="../js/libs/stats.min.js"></script>
+
+<script>
+    var container, stats;
+    var camera, controls, scene, renderer;
+    var pickingData = [], pickingTexture, pickingScene;
+    var highlightBox;
+    var mouse = new THREE.Vector2();
+    var offset = new THREE.Vector3( 10, 10, 10 );
+    init();
+    animate();
+    function init() {
+        container = document.getElementById( "container" );
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+        camera.position.z = 1000;
+        controls = new THREE.TrackballControls( camera );
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0xffffff );
+        pickingScene = new THREE.Scene();
+        /**
+         * WebGLRenderTarget
+         render target是一个缓冲，就是在这个缓冲中，视频卡为正在后台渲染的场景绘制像素。
+         它用于不同的效果，例如用于在一个图像显示在屏幕上之前先做一些处理。
+
+         WebGLRenderTarget(width : Number, height : Number, options : Object)
+         width -renderTarget的宽度
+         height - renderTarget的高度
+         options - (可选)一个保存着自动生成的目标纹理的纹理参数以及表示是否使用深度缓存/模板缓存的布尔值的对象 以下是一些合法选项：
+
+         wrapS - 默认是ClampToEdgeWrapping.
+         wrapT - 默认是ClampToEdgeWrapping.
+         magFilter - 默认是LinearFilter.
+         minFilter - 默认是LinearFilter.
+         format - 默认是RGBAFormat.
+         type - 默认是UnsignedByteType.
+         anisotropy - 默认是1. 参见Texture.anistropy
+         encoding - 默认是LinearEncoding.
+         depthBuffer - 默认是true. 如果不需要就设为false
+         stencilBuffer - 默认是true. 如果不需要就设为false
+
+         创建一个新WebGLRenderTarget
+         *
+         * */
+        pickingTexture = new THREE.WebGLRenderTarget( 1, 1 );
+        scene.add( new THREE.AmbientLight( 0x555555 ) );
+        var light = new THREE.SpotLight( 0xffffff, 1.5 );
+        light.position.set( 0, 500, 2000 );
+        scene.add( light );
+        var pickingMaterial = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
+        var defaultMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true, vertexColors: THREE.VertexColors, shininess: 0	} );
+        function applyVertexColors( geometry, color ) {
+            var position = geometry.attributes.position;
+            var colors = [];
+            for ( var i = 0; i < position.count; i ++ ) {
+                colors.push( color.r, color.g, color.b );
+            }
+            geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+        }
+        var geometriesDrawn = [];
+        var geometriesPicking = [];
+        var matrix = new THREE.Matrix4();
+        var quaternion = new THREE.Quaternion();
+        var color = new THREE.Color();
+        for ( var i = 0; i < 5000; i ++ ) {
+            var geometry = new THREE.BoxBufferGeometry();
+            var position = new THREE.Vector3();
+            position.x = Math.random() * 10000 - 5000;
+            position.y = Math.random() * 6000 - 3000;
+            position.z = Math.random() * 8000 - 4000;
+            var rotation = new THREE.Euler();
+            rotation.x = Math.random() * 2 * Math.PI;
+            rotation.y = Math.random() * 2 * Math.PI;
+            rotation.z = Math.random() * 2 * Math.PI;
+            var scale = new THREE.Vector3();
+            scale.x = Math.random() * 200 + 100;
+            scale.y = Math.random() * 200 + 100;
+            scale.z = Math.random() * 200 + 100;
+            quaternion.setFromEuler( rotation, false );
+            /**
+             * 设置将该对象由位置position，四元数quaternion 和 缩放scale 组合变换的矩阵。
+             * 内部先调用makeRotationFromQuaternion( quaternion )
+             * 再调用缩放scale( scale )
+             * 最后是平移setPosition( position )。
+             *
+             * */
+            matrix.compose( position, quaternion, scale );
+            /**
+             * .applyMatrix ( matrix : Matrix4 ) : null
+             用给定矩阵转换几何体的顶点坐标。
+             *
+             * */
+            geometry.applyMatrix( matrix );
+            // give the geometry's vertices a random color, to be displayed,
+            // 赋值颜色值
+            applyVertexColors( geometry, color.setHex( Math.random() * 0xffffff ) );
+            geometriesDrawn.push( geometry );
+            geometry = geometry.clone();
+            // give the geometry's vertices a color corresponding to the "id"
+            /**
+             * .setHex ( hex : Integer ) : Color
+             hex — hexadecimal triplet 格式。
+
+             采用十六进制值设置此颜色。
+             *
+             * **/
+            applyVertexColors( geometry, color.setHex( i ) );
+            geometriesPicking.push( geometry );
+            pickingData[ i ] = {
+                position: position,
+                rotation: rotation,
+                scale: scale
+            };
+        }
+        var objects = new THREE.Mesh( THREE.BufferGeometryUtils.mergeBufferGeometries( geometriesDrawn ), defaultMaterial );
+        scene.add( objects );
+        pickingScene.add( new THREE.Mesh( THREE.BufferGeometryUtils.mergeBufferGeometries( geometriesPicking ), pickingMaterial ) );
+        highlightBox = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(),
+            new THREE.MeshLambertMaterial( { color: 0xff0000 }
+            ) );
+        scene.add( highlightBox );
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        stats = new Stats();
+        container.appendChild( stats.dom );
+        renderer.domElement.addEventListener( 'mousemove', onMouseMove );
+    }
+    //
+    function onMouseMove( e ) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    }
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+        stats.update();
+    }
+    function pick() {
+        //render the picking scene off-screen
+        // set the view offset to represent just a single pixel under the mouse
+        /**
+         * .setViewOffset ( fullWidth : Float, fullHeight : Float, x : Float, y : Float, width : Float, height : Float ) : null
+         fullWidth — 多视图的全宽设置
+         fullHeight — 多视图的全高设置
+         x — 副摄像机的水平偏移
+         y — 副摄像机的垂直偏移
+         width — 副摄像机的宽度
+         height — 副摄像机的高度
+
+         在较大的viewing frustum（视锥体）中设置偏移量，对于多窗口或者多显示器的设置是很有用的。
+
+         例如，如果你有一个3x2的显示器阵列，每个显示器分辨率都是1920x1080，且这些显示器排列成像这样的网格：
+         +---+---+---+
+         | A | B | C |
+         +---+---+---+
+         | D | E | F |
+         +---+---+---+
+
+         那对于每个显示器，你可以这样来设置、调用：
+         var w = 1920;
+         var h = 1080;
+         var fullWidth = w * 3;
+         var fullHeight = h * 2;
+
+         // A
+         camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
+         // B
+         camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
+         // C
+         camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
+         // D
+         camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
+         // E
+         camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
+         // F
+         camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h ); 请注意，显示器的不必具有相同的大小，或者不必在网格中。
+         *
+         * */
+        camera.setViewOffset( renderer.domElement.width, renderer.domElement.height, mouse.x * window.devicePixelRatio | 0, mouse.y * window.devicePixelRatio | 0, 1, 1 );
+        // render the scene
+        /**
+         * .setRenderTarget ( renderTarget : WebGLRenderTarget, activeCubeFace : Integer, activeMipMapLevel : Integer ) : null
+         renderTarget -- 需要被激活的renderTarget(可选).
+         activeCubeFace -- Specifies the active cube side (PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5) of WebGLRenderTargetCube (optional).
+         activeMipMapLevel -- Specifies the active mipmap level (optional).
+
+         该方法设置活跃rendertarget. 参数缺省则将canvas设置成活跃rendertarget
+         *
+         * */
+        renderer.setRenderTarget( pickingTexture );
+
+         /**
+          * .render ( scene : Scene, camera : Camera, renderTarget : WebGLRenderTarget, forceClear : Boolean ) : null
+          用相机(camera)渲染一个场景(scene)
+          渲染一般是在canvas上完成的，或者是renderTarget(如果有指定)
+          如果forceClear值是true，那么颜色、深度及模板缓存将会在渲染之前清除，即使渲染器的autoClear属性值是false
+          即便forceClear设为true, 也可以通过将autoClearColor、autoClearStencil或autoClearDepth属性的值设为false来阻止对应缓存被清除。
+          * */
+        renderer.render( pickingScene, camera );
+        // clear the view offset so rendering returns to normal
+        /**
+         *
+         * .clearViewOffset () : null
+         清除任何由.setViewOffset设置的偏移量。
+         * */
+        camera.clearViewOffset();
+        //create buffer for reading single pixel
+        var pixelBuffer = new Uint8Array( 4 );
+        //read the pixel
+        /***
+         * .readRenderTargetPixels ( renderTarget : WebGLRenderTarget, x : Float, y : Float, width : Float, height : Float, buffer ) : null
+         将RenderTarget中的像素数据读取到传入的缓冲区中。这是WebGLRenderingContext.readPixels
+         (https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/readPixels)的包装器
+         *
+         * */
+        renderer.readRenderTargetPixels( pickingTexture, 0, 0, 1, 1, pixelBuffer );
+        console.log(pixelBuffer);
+        //interpret the pixel as an ID
+        var id = ( pixelBuffer[ 0 ] << 16 ) | ( pixelBuffer[ 1 ] << 8 ) | ( pixelBuffer[ 2 ] );
+        var data = pickingData[ id ];
+        if ( data ) {
+            //move our highlightBox so that it surrounds the picked object
+            if ( data.position && data.rotation && data.scale ) {
+                highlightBox.position.copy( data.position );
+                highlightBox.rotation.copy( data.rotation );
+                highlightBox.scale.copy( data.scale ).add( offset );
+                highlightBox.visible = true;
+            }
+        } else {
+            highlightBox.visible = false;
+        }
+    }
+    function render() {
+        controls.update();
+        pick();
+        renderer.setRenderTarget( null );
+        renderer.render( scene, camera );
+    }
+</script>
+
+</body>
+</html>

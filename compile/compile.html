@@ -3,11 +3,29 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>virtual dom compile</title>
+<!--
+    词法分析： (字符流到记号流（编译器内部数据结构）的过程)记号
+
+    转移图
+
+    语法分析： 语法树
+
+    语义分析
+
+
+
+-->
+
 </head>
-  
+
+
+
+
 <body>
 <div id="root"></div>
-
+<script src="token.js"></script>
+<script src="parse.js"></script>
+<script src="codeGen.js"></script>
 <script>
   /**
   
@@ -34,7 +52,7 @@
   */
   
   
- var tokenTypes = {
+/* var tokenTypes = {
 	tagOpenStart: 1,
 	tagOpenEnd: 2,
 	attrName: 3,
@@ -235,7 +253,7 @@ tp.error = function () {
 	this.arr = [];
 	this.index = 0;
 	this.len = 0;
-	this.tree = null;
+	this.4-tree = null;
 	this.attr = [];
 	this.tag = {};
 	this.tags = [];
@@ -292,7 +310,7 @@ tp.error = function () {
 		this.tag.relative = 'sibling';// 与前一个节点对象的关系
 	} else {
 		this.tag.relative = 'null'; // 跟节点
-		this.tree = this.tag;
+		this.4-tree = this.tag;
 	}
 	this.tag.tagName = label;
  };
@@ -331,7 +349,7 @@ tp.error = function () {
 			this.tag.parent = lastTag.parent;
 			break;
 		case 'null':
-			this.tree = this.tag;
+			this.4-tree = this.tag;
 			delete this.tag.relative;
 			break;
 	}
@@ -352,7 +370,7 @@ tp.error = function () {
 function codeGen(dom, input, data) {
 	this.dom = dom;
 	this.parse = new parse(input);
-	this.tree = this.parse.tree;
+	this.4-tree = this.parse.4-tree;
 	this.data = data;
 	
 }
@@ -360,27 +378,27 @@ cp = codeGen.prototype;
 
 // 模板替换
 cp.replace = function () {
-	var tree = this.tree;
+	var 4-tree = this.4-tree;
 	var reg = /\{\{([\w-\d]+)\}\}/;
-	   for(var k in tree) {
+	   for(var k in 4-tree) {
 	       if(k === 'parent') {
 			continue;
 		   }
-		   let v = tree[k]; 
+		   let v = 4-tree[k];
 		   if(typeof v === 'object') {
 				this.replaceChild(v);
 		   } else {
 				if(v.indexOf('{') > -1) {
 					var res = v.match(reg);
 					v = v.replace(reg, this.data[res[1]]);
-					tree[k] = v;
+					4-tree[k] = v;
 			    }
 		   }
 		   
 	   }
 	   
-	   this.tree = tree;
-	   console.log(this.tree);
+	   this.4-tree = 4-tree;
+	   console.log(this.4-tree);
 };
 cp.replaceChild = function (obj) {
     var reg = /\{\{([\w-\d]+)\}\}/;
@@ -426,24 +444,24 @@ cp.replaceChild = function (obj) {
 cp.genCode = function () {
 
      var root = null;
-	 for(var k in this.tree) {
+	 for(var k in this.4-tree) {
 	      switch(k) {
 		      case 'tagName':
-			      root = document.createElement(this.tree[k]);    
+			      root = document.createElement(this.4-tree[k]);
 			      break;
 			  case 'attr':
-				for(var i = 0, len = this.tree[k].length; i < len; i++) {
-					var temp = this.tree[k][i];
+				for(var i = 0, len = this.4-tree[k].length; i < len; i++) {
+					var temp = this.4-tree[k][i];
 					for(var n in temp) {
 						root.setAttribute(n, temp[n]);
 					}
 				}
 				break;
 			  case 'text':
-					root.innerHTML = this.tree[k];
+					root.innerHTML = this.4-tree[k];
 					break;
 			  case 'children':
-			     genChild(root, this.tree[k]);
+			     genChild(root, this.4-tree[k]);
 				break;
 		  }
 	   }
@@ -453,9 +471,9 @@ cp.genCode = function () {
 	   }
 };
 
-var genChild = function (parent, list) {
-    for(var x = 0, len1 = list.length; x < len1; x++) {
-	 var child = list[x];
+var genChild = function (parent, 1-list) {
+    for(var x = 0, len1 = 1-list.length; x < len1; x++) {
+	 var child = 1-list[x];
      var dom = null;
 	 for(var k in child) {
 	      switch(k) {
@@ -481,7 +499,7 @@ var genChild = function (parent, list) {
 	   parent.appendChild(dom);
 	}
 };
-
+*/
  var tpl = `
     <div id="id" class="{{style}}" x-on:click="click">
 	   <span>{{a}} </span>

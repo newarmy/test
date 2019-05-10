@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>test</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        html, body{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: black;
+        }
+        .box {
+            position: absolute;
+            top:50%;
+            left:50%;
+            margin-left:-3.75rem;
+            margin-top:-2rem;
+            padding: .3rem;
+            width:6.9rem;
+            height:4rem;
+            overflow: auto;
+            border:1px solid red;
+
+        }
+        img{
+            position: relative;
+            width:100%;
+        }
+    </style>
+    <script>
+
+        (function (win) {
+            //alert(document.documentElement.clientWidth);
+            document.documentElement.style.fontSize = document.documentElement.clientWidth / 7.5 + 'px';
+            let timerFlag = null;
+            function resizeLayout() {
+                if(timerFlag) {
+                    clearTimeout(timerFlag);
+                    timerFlag = null;
+                }
+                timerFlag = setTimeout(function () {
+                    document.documentElement.style.fontSize = document.documentElement.clientWidth / 7.5 + 'px';
+                }, 500);
+            }
+            if ("onorientationchange" in win) {
+                win.addEventListener("orientationchange", function () {
+                    resizeLayout();
+                }, false);
+            } else {
+                win.addEventListener("resize", function () {
+                    resizeLayout();
+                }, false);
+            }
+        }(window));
+    </script>
+</head>
+<body>
+<div class="box">
+    <img id="img" src="http://5b0988e595225.cdn.sohucs.com/images/20190213/35e72d907c014f698466ed63b82abae6.jpeg" />
+</div>
+<script src="gesture.js"></script>
+<script>
+    var zoom = 2;
+    var dx = 0;
+    var dy = 0;
+    var af = new AlloyFinger('.box', {
+        touchStart: function () { },
+        touchMove: function () { },
+        touchEnd:  function () { },
+        touchCancel: function () { },
+        multipointStart: function () { },
+        multipointEnd: function () { },
+        tap: function () { },
+        doubleTap: function () { },
+        longTap: function () { },
+        singleTap: function () { },
+        rotate: function (evt) {
+            console.log(evt.angle);
+        },
+        pinch: function (evt) {
+            console.log(evt.zoom);
+            zoom = evt.zoom;
+            var img = document.querySelector('.box');
+            img.style.transform = 'scale('+evt.zoom+')';
+        },
+        pressMove: function (evt) {
+            evt.preventDefault();
+            dx = dx + evt.deltaX;
+            dy = dy + evt.deltaY;
+            console.log(evt.deltaX);
+            console.log(evt.deltaY);
+            var img = document.querySelector('.box');
+            img.style.transform = 'scale('+zoom+') translate3d('+dx+'px, '+dy+'px, 0)';
+        },
+        swipe: function (evt) {
+            console.log("swipe" + evt.direction);
+        }
+    });
+</script>
+</body>
+</html>

@@ -32,6 +32,14 @@
 			renderer.shadowMap.enabled = true;
 
 			// 坐标轴
+			/***
+			 * 用于简单模拟3个坐标轴的对象.
+             红色代表 X 轴.
+			 绿色代表 Y 轴.
+			 蓝色代表 Z 轴.
+             size -- (可选的) 表示代表轴的线段长度. 默认为 1.
+			 *
+			 * */
 			var axes = new THREE.AxisHelper(20);
 			scene.add(axes);
 
@@ -77,13 +85,25 @@
 			//计算法线
 			geom.computeFaceNormals();
 			/**
-			 * Checks for duplicate vertices using hashmap.
-             Duplicated vertices are removed and faces' vertices are updated.
+			 * 通过 hashmap 检查重复的顶点。
+             重复的顶点将会被移除，面的顶点信息会被更新。
 			 * */
 			geom.mergeVertices();
 
             var materials = [
-                new THREE.MeshLambertMaterial({opacity: 0.6, color: 0x44ff44, transparent: true}),
+                /**
+				 * 一种非光泽表面的材质，没有镜面高光。
+
+                 该材质使用基于非物理的Lambertian模型来计算反射率。
+				 这可以很好地模拟一些表面（例如未经处理的木材或石材），
+				 但不能模拟具有镜面高光的光泽表面（例如涂漆木材）。
+				 * */
+                new THREE.MeshLambertMaterial({opacity: 0.6, color: 0x44ff44, transparent: false}),
+				/**
+				 *一个以简单着色（平面或线框）方式来绘制几何体的材质。
+
+                 这种材质不受光照的影响。
+				 * */
                 new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true})
             ];
             // 创建多材质对象， 返回的不是一个单独的网格对象，而是一个对象组。

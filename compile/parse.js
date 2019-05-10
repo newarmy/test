@@ -20,6 +20,8 @@
 	while(this.tokenObj.index < this.input.length) {
 		this.arr.push(this.tokenObj.peekToken());
 	}
+	console.log('-----------------------------------');
+	console.log(this.arr);
  };
  // 去语法分析
  pp.parseRoot = function () {
@@ -28,6 +30,8 @@
 		this.startParse(this.arr[this.index]);
 		this.index ++;
 	}
+	console.log('-----------------------------------');
+	console.log(this.tag);
  };
  pp.startParse = function (obj) {
 	switch(obj.type) {

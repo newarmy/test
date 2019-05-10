@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - arraycamera</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            margin: 0px;
+            background-color: #000000;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<script src="../three.js"></script>
+
+<script>
+    var camera, scene, renderer;
+    var mesh;
+    init();
+    animate();
+    function init() {
+        var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+        var AMOUNT = 6;
+        var WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
+        var HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
+        var cameras = [];
+        for ( var y = 0; y < AMOUNT; y ++ ) {
+            for ( var x = 0; x < AMOUNT; x ++ ) {
+                var subcamera = new THREE.PerspectiveCamera( 40, ASPECT_RATIO, 0.1, 10 );
+                //自定义的缓存数据
+                subcamera.view = new THREE.Vector4(
+                    Math.floor( x * WIDTH ),
+                    Math.floor( y * HEIGHT ),
+                    Math.ceil( WIDTH ),
+                    Math.ceil( HEIGHT ) );
+                subcamera.position.x = ( x / AMOUNT ) - 0.5;
+                subcamera.position.y = 0.5 - ( y / AMOUNT );
+                subcamera.position.z = 1.5;
+                console.log(( x / AMOUNT ) - 0.5,  0.5 - ( y / AMOUNT ));
+                subcamera.position.multiplyScalar( 2 );
+                subcamera.lookAt( 0, 0, 0 );
+                //subcamera.setViewport()
+                subcamera.setViewOffset(window.innerWidth,
+                    window.innerWidth,
+                    Math.floor( x * WIDTH ),
+                    Math.floor( y * HEIGHT ),
+                    Math.ceil( WIDTH ),
+                    Math.ceil( HEIGHT )
+                );
+                //更新物体及其子级的全局变换
+                subcamera.updateMatrixWorld();
+                cameras.push( subcamera );
+            }
+        }
+
+        console.log(cameras.length);
+        /*
+        * 摄像机阵列（ArrayCamera）
+ArrayCamera 用于更加高效地使用一组已经预定义的摄像机来渲染一个场景。这将能够更好地提升VR场景的渲染性能。
+一个 ArrayCamera 的实例中总是包含着一组子摄像机，应当为每一个子摄像机定义bound(边界)这个属性，
+这一属性决定了由该子摄像机所渲染的视口区域的大小。
+        * */
+        camera = new THREE.ArrayCamera( cameras );
+        camera.position.z = 3;
+        scene = new THREE.Scene();
+        /*
+        * AmbientLight
+环境光会均匀的照亮场景中的所有物体。
+
+环境光不能用来投射阴影，因为它没有方向。
+        * */
+        scene.add( new THREE.AmbientLight( 0x222244 ) );
+        /**
+         * 平行光（DirectionalLight）
+         平行光是沿着特定方向发射的光。这种光的表现像是无限远,从它发出的光线都是平行的。常常用平行光来模拟太阳光 的效果;
+         太阳足够远，因此我们可以认为太阳的位置是无限远，所以我们认为从太阳发出的光线也都是平行的。
+
+         平行光可以投射阴影 - 跳转至 DirectionalLightShadow 查看更多细节。
+
+         关于位置、目标和旋转说明
+         Three.js 的平行光常见的困惑是设置旋转没有效果。这是因为 three.js 的平行光类似与其他引擎的"目标平行光"。
+
+         这意味着它的方向是从一个平行光的位置 position 到 target的位置。 (而不是一个只有旋转分量的'自由平行光')。
+
+         这样做的原因是为了让光线投射阴影。 - the shadow 摄像机需要一个位置来计算阴影。
+         * */
+        var light = new THREE.DirectionalLight();
+        //平行光方向是从一个平行光的位置 position 到 target的位置
+        light.position.set( 0.5, 0.5, 1 );
+        /**
+        * 如果设置为 true 该平行光会产生动态阴影。 警告: 这样做的代价比较高而且需要一直调整到阴影看起来正确.
+         * 查看 DirectionalLightShadow 了解详细信息。该属性默认为 false。
+         *
+         * DirectionalLightShadow
+         这是用于在DirectionalLights内部计算阴影
+
+         与其他阴影类不同，它是使用OrthographicCamera来计算阴影，而不是PerspectiveCamera。
+         这是因为来自DirectionalLight的光线是平行的。
+        * **/
+
+        light.castShadow = true;
+        light.shadow.camera.zoom = 4; // tighter shadow map
+        scene.add( light );
+        var geometry = new THREE.PlaneBufferGeometry( 100, 100 );
+        var material = new THREE.MeshPhongMaterial( { color: 0x000066 } );
+        var background = new THREE.Mesh( geometry, material );
+        background.receiveShadow = true;
+        background.position.set( 0, 0, - 1 );
+        scene.add( background );
+        /**
+         * 圆柱
+         * CylinderGeometry(radiusTop : Float, radiusBottom : Float, height : Float, radialSegments : Integer, heightSegments : Integer, openEnded : Boolean, thetaStart : Float, thetaLength : Float)
+         radiusTop — 圆柱的顶部半径，默认值是1。
+         radiusBottom — 圆柱的底部半径，默认值是1。
+         height — 圆柱的高度，默认值是1。
+         radialSegments — 圆柱侧面周围的分段数，默认为8。
+         heightSegments — 圆柱侧面沿着其高度的分段数，默认值为1。
+         openEnded — 一个Boolean值，指明该圆锥的底面是开放的还是封顶的。默认值为false，即其底面默认是封顶的。
+         thetaStart — 第一个分段的起始角度，默认为0。（three o'clock position）
+         thetaLength — 圆柱底面圆扇区的中心角，通常被称为“θ”（西塔）。默认值是2*Pi，这使其成为一个完整的圆柱。
+         * */
+        var geometry = new THREE.CylinderBufferGeometry( 0.5, 0.5, 1, 32 );
+        var material = new THREE.MeshPhongMaterial( { color: 0xff0000 } );
+        mesh = new THREE.Mesh( geometry, material );
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add( mesh );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild( renderer.domElement );
+        //
+        window.addEventListener( 'resize', onWindowResize, false );
+    }
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+    function animate() {
+        mesh.rotation.x += 0.005;
+        mesh.rotation.z += 0.01;
+        renderer.render( scene, camera );
+        requestAnimationFrame( animate );
+    }
+</script>
+
+</body>
+</html>

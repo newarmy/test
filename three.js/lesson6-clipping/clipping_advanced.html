@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - clipping planes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            margin: 0px;
+            background-color: #000000;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<script src="../three.js"></script>
+<script src="../js/controls/OrbitControls.js"></script>
+
+<script src="../js/libs/stats.min.js"></script>
+<script src="../js/libs/dat.gui.min.js"></script>
+
+<script>
+    function planesFromMesh( vertices, indices ) {
+        // creates a clipping volume(体积;容积;容量;量;额;音量;响度) from a convex triangular mesh(凸三角形网格)
+        // specified by the arrays 'vertices' and 'indices'
+        var n = indices.length / 3,
+            result = new Array( n );
+        for ( var i = 0, j = 0; i < n; ++ i, j += 3 ) {
+            var a = vertices[ indices[ j ] ],
+                b = vertices[ indices[ j + 1 ] ],
+                c = vertices[ indices[ j + 2 ] ];
+            result[ i ] = new THREE.Plane().
+            setFromCoplanarPoints( a, b, c );
+        }
+        return result;
+    }
+    function createPlanes( n ) {
+        // creates an array of n uninitialized plane objects
+        var result = new Array( n );
+        for ( var i = 0; i !== n; ++ i )
+            result[ i ] = new THREE.Plane();
+        return result;
+    }
+    function assignTransformedPlanes( planesOut, planesIn, matrix ) {
+        // sets an array of existing planes to transformed 'planesIn'
+        for ( var i = 0, n = planesIn.length; i !== n; ++ i )
+            planesOut[ i ].copy( planesIn[ i ] ).applyMatrix4( matrix );
+    }
+    function cylindricalPlanes( n, innerRadius ) {
+        var result = createPlanes( n );
+        for ( var i = 0; i !== n; ++ i ) {
+            var plane = result[ i ],
+                angle = i * Math.PI * 2 / n;
+            plane.normal.set(
+                Math.cos( angle ), 0, Math.sin( angle ) );
+            plane.constant = innerRadius;
+        }
+        return result;
+    }
+    var planeToMatrix = ( function () {
+        // creates a matrix that aligns X/Y to a given plane
+        // temporaries:
+        var xAxis = new THREE.Vector3(),
+            yAxis = new THREE.Vector3(),
+            trans = new THREE.Vector3();
+        return function planeToMatrix( plane ) {
+            var zAxis = plane.normal,
+                matrix = new THREE.Matrix4();
+            // Hughes & Moeller '99
+            // "Building an Orthonormal Basis from a Unit Vector."
+            if ( Math.abs( zAxis.x ) > Math.abs( zAxis.z ) ) {
+                yAxis.set( - zAxis.y, zAxis.x, 0 );
+            } else {
+                yAxis.set( 0, - zAxis.z, zAxis.y );
+            }
+            xAxis.crossVectors( yAxis.normalize(), zAxis );
+            plane.coplanarPoint( trans );
+            return matrix.set(
+                xAxis.x, yAxis.x, zAxis.x, trans.x,
+                xAxis.y, yAxis.y, zAxis.y, trans.y,
+                xAxis.z, yAxis.z, zAxis.z, trans.z,
+                0,	 0, 0, 1 );
+        };
+    } )();
+    // A regular tetrahedron for the clipping volume:
+    var Vertices = [
+            new THREE.Vector3( + 1, 0, + Math.SQRT1_2 ),
+            new THREE.Vector3( - 1, 0, + Math.SQRT1_2 ),
+            new THREE.Vector3( 0, + 1, - Math.SQRT1_2 ),
+            new THREE.Vector3( 0, - 1, - Math.SQRT1_2 )
+        ],
+        Indices = [
+            0, 1, 2,	0, 2, 3,	0, 3, 1,	1, 3, 2
+        ],
+        Planes = planesFromMesh( Vertices, Indices ),
+        PlaneMatrices = Planes.map( planeToMatrix ),
+        GlobalClippingPlanes = cylindricalPlanes( 5, 3.5 ),
+        Empty = Object.freeze( [] );
+    var camera, scene, renderer, startTime, stats,
+        object, clipMaterial,
+        volumeVisualization,
+        globalClippingPlanes;
+    function init() {
+        camera = new THREE.PerspectiveCamera(
+            36, window.innerWidth / window.innerHeight, 0.25, 16 );
+        camera.position.set( 0, 1.5, 3 );
+        scene = new THREE.Scene();
+        // Lights
+        scene.add( new THREE.AmbientLight( 0x505050 ) );
+        var spotLight = new THREE.SpotLight( 0xffffff );
+        spotLight.angle = Math.PI / 5;
+        spotLight.penumbra = 0.2;
+        spotLight.position.set( 2, 3, 3 );
+        spotLight.castShadow = true;
+        spotLight.shadow.camera.near = 3;
+        spotLight.shadow.camera.far = 10;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        scene.add( spotLight );
+        var dirLight = new THREE.DirectionalLight( 0x55505a, 1 );
+        dirLight.position.set( 0, 2, 0 );
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 10;
+        dirLight.shadow.camera.right = 1;
+        dirLight.shadow.camera.left = - 1;
+        dirLight.shadow.camera.top	= 1;
+        dirLight.shadow.camera.bottom = - 1;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add( dirLight );
+        // Geometry
+        clipMaterial = new THREE.MeshPhongMaterial( {
+            color: 0xee0a10,
+            shininess: 100,
+            side: THREE.DoubleSide,
+            // Clipping setup:
+            clippingPlanes: createPlanes( Planes.length ),
+            clipShadows: true
+        } );
+        object = new THREE.Group();
+        var geometry = new THREE.BoxBufferGeometry( 0.18, 0.18, 0.18 );
+        for ( var z = - 2; z <= 2; ++ z )
+            for ( var y = - 2; y <= 2; ++ y )
+                for ( var x = - 2; x <= 2; ++ x ) {
+                    var mesh = new THREE.Mesh( geometry, clipMaterial );
+                    mesh.position.set( x / 5, y / 5, z / 5 );
+                    mesh.castShadow = true;
+                    object.add( mesh );
+                }
+        scene.add( object );
+        var planeGeometry =
+                new THREE.PlaneBufferGeometry( 3, 3, 1, 1 ),
+            color = new THREE.Color();
+        volumeVisualization = new THREE.Group();
+        volumeVisualization.visible = false;
+        for ( var i = 0, n = Planes.length; i !== n; ++ i ) {
+            var material = new THREE.MeshBasicMaterial( {
+                color: color.setHSL( i / n, 0.5, 0.5 ).getHex(),
+                side: THREE.DoubleSide,
+                opacity: 0.2,
+                transparent: true,
+                // clip to the others to show the volume (wildly
+                // intersecting transparent planes look bad)
+                clippingPlanes: clipMaterial.clippingPlanes.
+                filter( function ( _, j ) {
+                    return j !== i;
+                } )
+                // no need to enable shadow clipping - the plane
+                // visualization does not cast shadows
+            } );
+            volumeVisualization.add(
+                new THREE.Mesh( planeGeometry, material ) );
+        }
+        scene.add( volumeVisualization );
+        var ground = new THREE.Mesh( planeGeometry,
+            new THREE.MeshPhongMaterial( {
+                color: 0xa0adaf, shininess: 150 } ) );
+        ground.rotation.x = - Math.PI / 2;
+        ground.scale.multiplyScalar( 3 );
+        ground.receiveShadow = true;
+        scene.add( ground );
+        // Renderer
+        var container = document.body;
+        renderer = new THREE.WebGLRenderer();
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        window.addEventListener( 'resize', onWindowResize, false );
+        container.appendChild( renderer.domElement );
+        // Clipping setup:
+        globalClippingPlanes = createPlanes( GlobalClippingPlanes.length );
+        renderer.clippingPlanes = Empty;
+        renderer.localClippingEnabled = true;
+        // Stats
+        stats = new Stats();
+        container.appendChild( stats.dom );
+        // Controls
+        var controls = new THREE.OrbitControls( camera, renderer.domElement );
+        controls.target.set( 0, 1, 0 );
+        controls.update();
+        // GUI
+        var gui = new dat.GUI(),
+            folder = gui.addFolder( "Local Clipping" ),
+            props = {
+                get 'Enabled'() {
+                    return renderer.localClippingEnabled;
+                },
+                set 'Enabled'( v ) {
+                    renderer.localClippingEnabled = v;
+                    if ( ! v ) volumeVisualization.visible = false;
+                },
+                get 'Shadows'() {
+                    return clipMaterial.clipShadows;
+                },
+                set 'Shadows'( v ) {
+                    clipMaterial.clipShadows = v;
+                },
+                get 'Visualize'() {
+                    return volumeVisualization.visible;
+                },
+                set 'Visualize'( v ) {
+                    if ( renderer.localClippingEnabled )
+                        volumeVisualization.visible = v;
+                }
+            };
+        folder.add( props, 'Enabled' );
+        folder.add( props, 'Shadows' );
+        folder.add( props, 'Visualize' ).listen();
+        gui.addFolder( "Global Clipping" ).
+        add( {
+            get 'Enabled'() {
+                return renderer.clippingPlanes !== Empty;
+            },
+            set 'Enabled'( v ) {
+                renderer.clippingPlanes = v ?
+                    globalClippingPlanes : Empty;
+            }
+        }, "Enabled" );
+        // Start
+        startTime = Date.now();
+    }
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+    function setObjectWorldMatrix( object, matrix ) {
+        // set the orientation of an object based on a world matrix
+        var parent = object.parent;
+        scene.updateMatrixWorld();
+        object.matrix.getInverse( parent.matrixWorld );
+        object.applyMatrix( matrix );
+    }
+    /**
+     * 表示为一个 4x4 matrix.
+
+     在3D计算机图形学中，4x4矩阵最常用的用法是作为一个变换矩阵Transformation Matrix。
+     有关WebGL中使用的变换矩阵的介绍，请参阅本教程this tutorial。
+
+     这使得表示三维空间中的一个点的向量Vector3通过乘以矩阵来进行转换，
+     如平移、旋转、剪切、缩放、反射、正交或透视投影等。这就是把矩阵应用到向量上。
+
+     任何3D物体Object3D都有三个关联的矩阵：
+
+     Object3D.matrix: 存储物体的本地变换。 这是对象相对于其父对象的变换。
+     Object3D.matrixWorld: 对象的全局或世界变换。如果对象没有父对象，那么这与存储在矩阵matrix中的本地变换相同。
+     Object3D.modelViewMatrix: 表示对象相坐标相对于摄像机空间坐标转换，
+     一个对象的 modelViewMatrix 是物体世界变换矩阵乘以摄像机相对于世界空间变换矩阵的逆矩阵。
+     摄像机Cameras 有两个额外的四维矩阵:
+     Camera.matrixWorldInverse: 视矩阵 - 摄像机世界坐标变换的逆矩阵。
+     Camera.projectionMatrix: 表示将场景中的信息投影到裁剪空间。
+     注意：物体的正规矩阵 Object3D.normalMatrix 并不是一个4维矩阵，而是一个三维矩阵Matrix3。
+     注意行优先列优先的顺序。
+     设置set()方法参数采用行优先row-major， 而它们在内部是用列优先column-major顺序存储在数组当中。
+
+     这意味着
+     var m = new Matrix4();
+
+     m.set( 11, 12, 13, 14,
+     21, 22, 23, 24,
+     31, 32, 33, 34,
+     41, 42, 43, 44 ); 元素数组elements将存储为:
+     m.elements = [ 11, 21, 31, 41,
+     12, 22, 32, 42,
+     13, 23, 33, 43,
+     14, 24, 34, 44 ]; 在内部，所有的计算都是使用列优先顺序进行的。
+     然而，由于实际的排序在数学上没有什么不同，
+     而且大多数人习惯于以行优先顺序考虑矩阵，
+     所以three.js文档以行为主的顺序显示矩阵。 请记住，如果您正在阅读源代码，
+     您必须对这里列出的任何矩阵进行转置transpose，以理解计算。
+     *
+     * */
+    var transform = new THREE.Matrix4(),
+        tmpMatrix = new THREE.Matrix4();
+    function animate() {
+        var currentTime = Date.now(),
+            time = ( currentTime - startTime ) / 1000;
+        requestAnimationFrame( animate );
+        object.position.y = 1;
+        object.rotation.x = time * 0.5;
+        object.rotation.y = time * 0.2;
+        /**
+         * .updateMatrix () : null
+         更新局部变换。
+         * */
+        object.updateMatrix();
+        transform.copy( object.matrix );
+        var bouncy = Math.cos( time * .5 ) * 0.5 + 0.7;
+        /**
+         * .makeScale ( x : Float, y : Float, z : Float ) : this
+         x - 在X轴方向的缩放比。
+         y - 在Y轴方向的缩放比。
+         z - 在Z轴方向的缩放比。
+
+         将这个矩阵设置为缩放变换:
+         x, 0, 0, 0,
+         0, y, 0, 0,
+         0, 0, z, 0,
+         0, 0, 0, 1
+         * */
+        transform.multiply(
+            tmpMatrix.makeScale( bouncy, bouncy, bouncy ) );
+        assignTransformedPlanes(
+            clipMaterial.clippingPlanes, Planes, transform );
+        var planeMeshes = volumeVisualization.children;
+        for ( var i = 0, n = planeMeshes.length; i !== n; ++ i ) {
+            tmpMatrix.multiplyMatrices( transform, PlaneMatrices[ i ] );
+            setObjectWorldMatrix( planeMeshes[ i ], tmpMatrix );
+        }
+        transform.makeRotationY( time * 0.1 );
+        assignTransformedPlanes(
+            globalClippingPlanes, GlobalClippingPlanes, transform );
+        stats.begin();
+        renderer.render( scene, camera );
+        stats.end();
+    }
+    init();
+    animate();
+</script>
+
+</body>
+</html>

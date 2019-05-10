@@ -1,0 +1,23 @@
+{
+  "name": "learn-koa",
+  "version": "1.0.0",
+  "description": "test koa",
+  "main": "index.js",
+  "dependencies": {
+    "koa": "^2.5.2",
+    "koa-bodyparser": "^4.2.1",
+    "koa-ejs": "^4.1.2",
+    "koa-logger": "^3.2.0",
+    "koa-multer": "^1.0.2",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node ./testServer/app.js",
+    "ly": "node ./lyServer/app.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

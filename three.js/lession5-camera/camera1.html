@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - cameras</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #808080;
+            font-family:Monospace;
+            font-size:13px;
+            text-align:center;
+            background-color: #000;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+<script src="../three.js"></script>
+<script>
+    var screenW = window.innerWidth;
+    var screenH = window.innerHeight;
+    var aspect = screenW/screenH;
+
+    var container;
+    var camera, scene, renderer, mesh;
+    var cameraRig, activeCamera, activeHelper;
+    var cameraPerspective, cameraPerspectiveHelper, cameraOrtho, cameraOrthoHelper ;
+    var frustumSize = 600; //截锥体尺寸
+
+    init();
+    animate();
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(50, 0.5 * aspect, 1, 10000);
+
+        camera.position.z = 2500;
+
+        cameraPerspective = new THREE.PerspectiveCamera(50, 0.5 * aspect, 150, 1000);
+        /**
+         * 用于模拟相机视锥体的辅助对象.
+         它使用 LineSegments 来模拟相机视锥体.
+
+         CameraHelper( camera : Camera )
+         camera -- 被模拟的相机.
+
+         为指定相机创建一个新的相机辅助对象 CameraHelper
+         * */
+        cameraPerspectiveHelper = new THREE.CameraHelper(cameraPerspective);
+        scene.add(cameraPerspective);
+
+        /**
+         * OrthographicCamera( left : Number, right : Number, top : Number, bottom : Number, near : Number, far : Number )
+         left — 摄像机视锥体左侧面。
+         right — 摄像机视锥体右侧面。
+         top — 摄像机视锥体上侧面。
+         bottom — 摄像机视锥体下侧面。
+         near — 摄像机视锥体近端面。
+         far — 摄像机视锥体远端面。
+         0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2,
+         frustumSize / 2, frustumSize / - 2, 150, 1000
+         * */
+        cameraOrtho = new THREE.OrthographicCamera(
+            0.5 * frustumSize * aspect/ -2,
+            0.5 * frustumSize * aspect/2,
+            frustumSize / 2,
+            frustumSize / - 2,
+            150,
+            1000
+        );
+        cameraOrthoHelper = new THREE.CameraHelper(cameraOrtho);
+        scene.add(cameraOrthoHelper);
+
+        activeCamera = cameraPerspective;
+        activeHelper = cameraPerspectiveHelper;
+
+        // counteract different front orientation of cameras vs rig
+        cameraOrtho.rotation.y = Math.PI;
+        cameraPerspective.rotation.y = Math.PI;
+
+        /**
+         * 组（Group） 相机组
+         它几乎和Object3D是相同的，其目的是使得组中对象在语法上的结构更加清晰。
+         * */
+        cameraRig = new THREE.Group();
+        cameraRig.add( cameraPerspective );
+        cameraRig.add( cameraOrtho );
+        scene.add( cameraRig );
+
+        //球体
+        mesh = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(100, 16, 8),
+            new THREE.MeshBasicMaterial({color:0xffffff, wireframe: true})
+        );
+        scene.add(mesh);
+
+        //球体2
+        var mesh2 = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(50, 16, 8),
+            new THREE.MeshBasicMaterial({color:0x00ff00, wireframe: true})
+        );
+        mesh2.position.y = 150;
+        mesh.add(mesh2);
+
+        //球体3
+        var mesh3 = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(5, 16, 8),
+            new THREE.MeshBasicMaterial({color: 0x0000ff, wireframe: true})
+        );
+        mesh3.position.z = 150;
+        cameraRig.add(mesh3);
+
+        /**
+         * BufferGeometry
+         是面片、线或点几何体的有效表述。包括顶点位置，面片索引、法相量、
+         颜色值、UV 坐标和自定义缓存属性值。
+         使用 BufferGeometry 可以有效减少向 GPU 传输上述数据所需的开销。
+         * */
+        var geometry = new THREE.BufferGeometry();
+        var vertices = [];//顶点
+
+        for(var i = 0; i < 10000; i++) {
+            /**
+             * randFloatSpread ( range : Float ) : Float
+             *
+             * 在区间 -range / 2 到 range / 2 随机一个浮点数。
+             * */
+            vertices.push(THREE.Math.randFloatSpread(2000)); // x
+            vertices.push(THREE.Math.randFloatSpread(2000)); // y
+            vertices.push(THREE.Math.randFloatSpread(2000)); // z
+        }
+        /**
+         * geometry.addAttribute
+         *
+         * .addAttribute ( name : String, attribute : BufferAttribute ) : BufferGeometry
+         为当前几何体增加一个 attribute。 的属性，在类的内部，有一个存储 .attributes 的 hashmap， 通过该 hashmap，
+         遍历 attributes 的速度会更快。而使用该方法，可以向 hashmap 内部增加 attribute。
+         所以，你需要使用该方法来添加 attributes。
+         *
+         *
+         * BufferAttribute Types
+         在 three.js 中一共有 9 种 BufferAttribute。每种和 JavaScript 中的类型相对应。 Typed Arrays.
+
+         THREE.Float64BufferAttribute
+         THREE.Float32BufferAttribute
+         THREE.Uint32BufferAttribute
+         THREE.Int32BufferAttribute
+         THREE.Uint16BufferAttribute
+         THREE.Int16BufferAttribute
+         THREE.Uint8ClampedBufferAttribute
+         THREE.Uint8BufferAttribute
+         THREE.Int8BufferAttribute
+
+
+         BufferAttribute( array : TypedArray, itemSize : Integer, normalized : Boolean )
+         array -- 必须是 TypedArray. 类型，用于实例化缓存。
+         该队列应该包含：
+         itemSize * numVertices 个元素，numVertices 是 BufferGeometry中的顶点数目
+
+         itemSize -- 队列中与顶点相关的数据值的大小。举例，如果 attribute 存储的是三元组（例如顶点空间坐标、法向量或颜色值）
+         则itemSize的值应该是3。
+
+         normalized -- (可选) 指明缓存中的数据如何与GLSL代码中的数据对应。例如，如果array是 UInt16Array类型，
+         且normalized的值是 true，则队列中的值将会从 0 - +65535 映射为 GLSL 中的 0.0f - +1.0f。
+         如果array是 Int16Array (有符号)，则值将会从 -32767 - +32767 映射为 -1.0f - +1.0f。
+         若 normalized 的值为 false，则数据映射不会归一化，而会直接映射为 float 值，例如，32767 将会映射为 32767.0f.
+         * */
+        geometry.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+        var particles = new THREE.Points(geometry, new THREE.PointsMaterial({color: 0x888888}));
+        scene.add(particles);
+         //antialias 抗锯齿
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(screenW, screenH);
+        container.appendChild(renderer.domElement);
+
+        renderer.autoClear = false;
+
+
+        window.addEventListener( 'resize', onWindowResize, false );
+        document.addEventListener( 'keydown', onKeyDown, false );
+    }
+
+    //
+    function onKeyDown( event ) {
+        switch ( event.keyCode ) {
+            case 79: /*O*/
+                activeCamera = cameraOrtho;
+                activeHelper = cameraOrthoHelper;
+                break;
+            case 80: /*P*/
+                activeCamera = cameraPerspective;
+                activeHelper = cameraPerspectiveHelper;
+                break;
+        }
+    }
+
+
+    function onWindowResize() {
+        screenW = window.innerWidth;
+        screenH = window.innerHeight;
+        aspect = screenW / screenH;
+        renderer.setSize( screenW, screenH );
+        camera.aspect = 0.5 * aspect;
+        camera.updateProjectionMatrix();
+        cameraPerspective.aspect = 0.5 * aspect;
+        cameraPerspective.updateProjectionMatrix();
+        cameraOrtho.left = - 0.5 * frustumSize * aspect / 2;
+        cameraOrtho.right = 0.5 * frustumSize * aspect / 2;
+        cameraOrtho.top = frustumSize / 2;
+        cameraOrtho.bottom = - frustumSize / 2;
+        cameraOrtho.updateProjectionMatrix();
+    }
+
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+    }
+    function render() {
+        var r = Date.now() * 0.0005;
+        mesh.position.x = 700 * Math.cos( r );
+        mesh.position.z = 700 * Math.sin( r );
+        mesh.position.y = 700 * Math.sin( r );
+        mesh.children[ 0 ].position.x = 70 * Math.cos( 2 * r );
+        mesh.children[ 0 ].position.z = 70 * Math.sin( r );
+        if ( activeCamera === cameraPerspective ) {
+            cameraPerspective.fov = 35 + 30 * Math.sin( 0.5 * r );
+            cameraPerspective.far = mesh.position.length();
+            cameraPerspective.updateProjectionMatrix();
+            cameraPerspectiveHelper.update();
+            cameraPerspectiveHelper.visible = true;
+            cameraOrthoHelper.visible = false;
+        } else {
+            cameraOrtho.far = mesh.position.length();
+            cameraOrtho.updateProjectionMatrix();
+            cameraOrthoHelper.update();
+            cameraOrthoHelper.visible = true;
+            cameraPerspectiveHelper.visible = false;
+        }
+        cameraRig.lookAt( mesh.position );
+        renderer.clear();
+        activeHelper.visible = true;
+        renderer.setViewport( 0, 0, screenW / 2, screenH );
+        renderer.render( scene, activeCamera );
+        activeHelper.visible = true;
+        renderer.setViewport( screenW / 2, 0, screenW / 2, screenH );
+        renderer.render( scene, camera );
+
+    }
+
+</script>
+</body>
+</html>

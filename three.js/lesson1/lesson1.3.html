@@ -71,6 +71,11 @@
             // 点光源
 			var spotLight = new THREE.SpotLight(0xffffff);
 			spotLight.position.set(-40, 60, -10);
+			/**
+			 * 此属性设置为 true 聚光灯将投射阴影。
+			 * 警告: 这样做的代价比较高而且需要一直调整到阴影看起来正确。
+			 * 查看 SpotLightShadow 了解详细信息。 默认值为 false
+			 * */
 			spotLight.castShadow = true;
 			scene.add(spotLight);
 

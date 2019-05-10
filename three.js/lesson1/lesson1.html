@@ -19,7 +19,7 @@
 
 			// 创建一个立方体，并添加到场景
 			var geometry = new THREE.BoxGeometry(1,1,1);
-			var material = new THREE.MeshBasicMaterial({color:0x00ff00});
+			var material = new THREE.MeshBasicMaterial({color:0xffff00});
 			var cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
             /*
@@ -27,7 +27,7 @@
                 参数： 视角， 宽高比， 最近切面距离，最远切面距离
             */
 			var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-			camera.position.z = 5;
+			camera.position.z = 3;
 			//渲染器
 			
 			var renderer = new THREE.WebGLRenderer(scene, camera);
@@ -40,8 +40,8 @@
 			function render() {
 				requestAnimationFrame(render);
 				//使动画， 旋转
-				cube.rotation.x += 0.1;
-				cube.rotation.y += 0.1;
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
 				renderer.render(scene, camera);
 			}
 			render();

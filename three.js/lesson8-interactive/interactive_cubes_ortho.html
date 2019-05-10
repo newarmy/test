@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - interactive cubes</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<script src="../js/three.js"></script>
+
+<script src="../js/libs/stats.min.js"></script>
+
+<script>
+    var container, stats;
+    var camera, scene, raycaster, renderer;
+    var mouse = new THREE.Vector2(), INTERSECTED;
+    //半径
+    var radius = 500, theta = 0;
+    var frustumSize = 1000; // 截头体；截锥体
+    init();
+    animate();
+    function init() {
+        container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        var info = document.createElement( 'div' );
+        info.style.position = 'absolute';
+        info.style.top = '10px';
+        info.style.width = '100%';
+        info.style.textAlign = 'center';
+        info.innerHTML = '<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive cubes';
+        container.appendChild( info );
+
+
+        var aspect = window.innerWidth / window.innerHeight;
+        /**
+         * 正交相机（OrthographicCamera）
+           这一摄像机使用orthographic projection（正交投影）来进行投影。
+           在这种投影模式下，无论物体距离相机距离远或者近，在最终渲染的图片中物体的大小都保持不变。
+           这对于渲染2D场景或者UI元素是非常有用的。
+
+             OrthographicCamera(
+                left : Number,
+                right : Number,
+                top : Number,
+                bottom : Number,
+                near : Number,
+                far : Number )
+             left — 摄像机视锥体左侧面。
+             right — 摄像机视锥体右侧面。
+             top — 摄像机视锥体上侧面。
+             bottom — 摄像机视锥体下侧面。
+             near — 摄像机视锥体近端面。
+             far — 摄像机视锥体远端面。
+         *
+         * */
+        camera = new THREE.OrthographicCamera(
+            frustumSize * aspect / - 2,
+            frustumSize * aspect / 2,
+            frustumSize / 2,
+            frustumSize / - 2,
+            1,
+            1000 );
+
+        scene = new THREE.Scene();
+
+        scene.background = new THREE.Color( 0xf0f0f0 );
+
+        var light = new THREE.DirectionalLight( 0xffffff, 1 );
+        light.position.set( 1, 1, 1 ).normalize();
+        scene.add( light );
+
+        var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+        for ( var i = 0; i < 2000; i ++ ) {
+            var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+            object.position.x = Math.random() * 800 - 400;
+            object.position.y = Math.random() * 800 - 400;
+            object.position.z = Math.random() * 800 - 400;
+
+            object.rotation.x = Math.random() * 2 * Math.PI;
+            object.rotation.y = Math.random() * 2 * Math.PI;
+            object.rotation.z = Math.random() * 2 * Math.PI;
+
+            object.scale.x = Math.random() + 0.5;
+            object.scale.y = Math.random() + 0.5;
+            object.scale.z = Math.random() + 0.5;
+
+            scene.add( object );
+        }
+        raycaster = new THREE.Raycaster();
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        stats = new Stats();
+        container.appendChild( stats.dom );
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        //
+        window.addEventListener( 'resize', onWindowResize, false );
+    }
+    function onWindowResize() {
+        var aspect = window.innerWidth / window.innerHeight;
+        camera.left = - frustumSize * aspect / 2;
+        camera.right = frustumSize * aspect / 2;
+        camera.top = frustumSize / 2;
+        camera.bottom = - frustumSize / 2;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+    function onDocumentMouseMove( event ) {
+        event.preventDefault();
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    }
+    //
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+        stats.update();
+    }
+    function render() {
+        theta += 0.1;
+        if(theta < 2) {
+            console.log('-------------------------------------');
+            console.log('theta = ' + theta);
+            console.log(THREE.Math.degToRad(theta));
+            console.log('-------------------------------------');
+        }
+        //.degToRad ( degrees : Float ) : Float
+        //将度转化为弧度。
+        camera.position.x = radius * Math.sin( THREE.Math.degToRad( theta ) );
+        camera.position.y = radius * Math.sin( THREE.Math.degToRad( theta ) );
+        camera.position.z = radius * Math.cos( THREE.Math.degToRad( theta ) );
+        camera.lookAt( scene.position );
+        camera.updateMatrixWorld();
+        // find intersections
+        raycaster.setFromCamera( mouse, camera );
+        var intersects = raycaster.intersectObjects( scene.children );
+        if ( intersects.length > 0 ) {
+            if(theta < 2) {
+                console.dir(intersects);
+            }
+            if ( INTERSECTED != intersects[ 0 ].object ) {
+                if ( INTERSECTED ) {
+                    INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+                }
+                INTERSECTED = intersects[ 0 ].object;
+                /**
+                 * .emissive : Color
+                 材质的放射（光）颜色，基本上是不受其他光照影响的固有颜色。默认为黑色。
+                 * */
+                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                INTERSECTED.material.emissive.setHex( 0xff0000 );
+            }
+        } else {
+            if ( INTERSECTED ) {
+                INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+            }
+
+            INTERSECTED = null;
+        }
+        renderer.render( scene, camera );
+    }
+</script>
+
+</body>
+</html>

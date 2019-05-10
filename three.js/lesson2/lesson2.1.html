@@ -30,10 +30,23 @@
 			//属性你可以决定雾从什么地方开始，以及浓度加深的程度。
 			scene.fog = new THREE.Fog(0xffffff, 0.015, 100);
 			//设置场景中雾的浓度
-			scene.fog = new THREE.FogExp2(0xffffff, 0.015);
+			/**
+			 * .name : String
+             对象的名称，可选、不必唯一。默认值是一个空字符串。
+
+             # .color : Color
+             雾的颜色。比如说，如果将其设置为黑色，远处的物体将被渲染成黑色。
+
+             # .density : Float
+             定义雾的密度将会增长多块。
+
+             默认值是0.00025.
+			 *
+			 * */
+			//scene.fog = new THREE.FogExp2(0x000000, 0.015);
 
 			// 所用添加到场景中的物体都会用同样的材质
-			scene.overrideMaterial = new THREE.MeshLambertMaterial({color:0xffffff});
+			scene.overrideMaterial = new THREE.MeshLambertMaterial({color:0xff0000});
 
 			//摄像机，
             /*
@@ -63,7 +76,7 @@
             plane.position.x = 15;
             plane.position.y = 0;
             plane.position.z = 0;
-
+            //对象是否被渲染到阴影贴图中。默认值为false。
             plane.receiveShadow = true;
 			scene.add(plane);
 
@@ -81,6 +94,12 @@
 			//球体
 			var sphereGeometry = new THREE.SphereGeometry(4, 20, 20);
 			var sphereMaterial = new THREE.MeshLambertMaterial({color:0x7777ff, wireframe: true});
+			/**
+			 * 表示基于以三角形为polygon mesh（多边形网格）的物体的类。
+			 * 同时也作为其他类的基类，例如SkinnedMesh。
+			 * geometry —— （可选）Geometry或者BufferGeometry的实例，默认值是一个新的BufferGeometry。
+              material —— （可选）一个Material，或是一个包含有Material的数组，默认是一个新的MeshBasicMaterial。
+			 * */
 			var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
             sphere.castShadow = true;
 			sphere.position.x = 20;
@@ -122,6 +141,13 @@
 			    requestAnimationFrame(renderScene);
 			    stats.update();
 
+			    /**
+				 * .traverse ( callback : Function ) : null
+                 callback - 以一个object3D对象作为第一个参数的函数。
+
+                 在对象以及后代中执行的回调函数。
+				 *
+				 * */
 
                 scene.traverse(function (e) {
                     // e 为场景中的每个元素

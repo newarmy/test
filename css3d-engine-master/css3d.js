@@ -285,7 +285,7 @@
 
         __sort: ['X', 'Y', 'Z'],
         sort: function (s0, s1, s2) {
-            if (arguments.length > 3) throw 'sort arguments is wrong!';
+            if (arguments.length > 3) throw '6-sort arguments is wrong!';
             this.__sort = [s0, s1, s2];
             return this;
         },

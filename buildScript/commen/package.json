@@ -1,0 +1,52 @@
+{
+  "name": "image-club",
+  "version": "1.0.0",
+  "description": "车图社",
+  "main": "main.js",
+  "scripts": {
+    "dev": "webpack --config webpack.dev.js",
+    "watch": "webpack --config webpack.dev.js --watch",
+    "prod": "webpack --config webpack.prod.js",
+    "modern": "webpack --config webpack.modern.js",
+    "test": "test"
+  },
+  "author": "dxj",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/plugin-transform-runtime": "^7.1.0",
+    "@babel/preset-env": "^7.1.6",
+    "autoprefixer": "^9.3.1",
+    "babel-loader": "^8.0.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
+    "clean-webpack-plugin": "^2.0.1",
+    "css-loader": "^1.0.1",
+    "es3ify-webpack-plugin": "^0.1.0",
+    "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "file-loader": "^2.0.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.4.5",
+    "postcss-loader": "^3.0.0",
+    "style-loader": "^0.23.1",
+    "uglifyjs-webpack-plugin": "^2.1.2",
+    "url-loader": "^1.1.2",
+    "vue-loader": "^15.4.2",
+    "vue-template-compiler": "^2.5.17",
+    "webpack": "^4.26.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.2.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.1.5",
+    "axios": "^0.18.0",
+    "es3ify-loader": "^0.2.0",
+    "vue": "^2.5.17",
+    "vuex": "^3.0.1"
+  },
+  "browserslist": [
+    "last 2 version",
+    "> .25%"
+  ]
+}

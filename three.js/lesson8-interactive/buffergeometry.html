@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - interactive - buffergeometry</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #cccccc;
+            font-family:Monospace;
+            font-size:13px;
+            text-align:center;
+            background-color: #050505;
+            margin: 0px;
+            overflow: hidden;
+        }
+        #info {
+            position: absolute;
+            top: 0px; width: 100%;
+            padding: 5px;
+        }
+        a {
+            color: #0080ff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive - buffergeometry</div>
+
+<script src="../js/three.js"></script>
+
+<script src="../js/WebGL.js"></script>
+<script src="../js/libs/stats.min.js"></script>
+
+<script>
+    if ( WEBGL.isWebGLAvailable() === false ) {
+        document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+    }
+    var container, stats;
+    var camera, scene, renderer;
+    var raycaster, mouse;
+    var mesh, line;
+    init();
+    animate();
+    function init() {
+        container = document.getElementById( 'container' );
+        //
+        camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 3500 );
+        camera.position.z = 2750;
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x050505 );
+        /***
+         * 这个类中的参数定义了线性雾。也就是说，雾的密度是随着距离线性增大的。
+
+         构造器
+         Fog( color : Integer, near : Float, far : Float )
+         颜色参数传入Color构造函数中，来设置颜色属性。颜色可以是一个十六进制的整型数，或者是CSS风格的字符串。
+         *
+         * */
+        scene.fog = new THREE.Fog( 0x050505, 2000, 3500 );
+        /**
+         * AmbientLight
+         环境光会均匀的照亮场景中的所有物体。
+
+         环境光不能用来投射阴影，因为它没有方向。
+
+         AmbientLight( color : Integer, intensity : Float )
+         color - (参数可选）颜色的rgb数值。缺省值为 0xffffff。
+         intensity - (参数可选)光照的强度。缺省值为 1。
+
+         创建一个环境光对象。
+         * */
+        scene.add( new THREE.AmbientLight( 0x444444 ) );
+        /**
+         *平行光是沿着特定方向发射的光。这种光的表现像是无限远,从它发出的光线都是平行的。常常用平行光来模拟太阳光 的效果;
+         * 太阳足够远，因此我们可以认为太阳的位置是无限远，所以我们认为从太阳发出的光线也都是平行的。
+         *
+         * 关于位置、目标和旋转说明
+         Three.js 的平行光常见的困惑是设置旋转没有效果。这是因为 three.js 的平行光类似与其他引擎的"目标平行光"。
+
+         这意味着它的方向是从一个平行光的位置 position 到 target的位置。 (而不是一个只有旋转分量的'自由平行光')。
+
+         这样做的原因是为了让光线投射阴影。 - the shadow 摄像机需要一个位置来计算阴影。
+
+         有关更新目标的详细信息，请参阅 target 下面的目标属性。
+
+         平行光的方向是从它的位置到目标位置。默认的目标位置为原点 (0,0,0)。
+         注意: 对于目标的位置，要将其更改为除缺省值之外的任何位置,它必须被添加到 scene 场景中去。
+         * */
+        var light1 = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        light1.position.set( 1, 1, 1 );
+        scene.add( light1 );
+        var light2 = new THREE.DirectionalLight( 0xffffff, 1.5 );
+        light2.position.set( 0, - 1, 0 );
+        scene.add( light2 );
+        //
+        var triangles = 5000;
+        var geometry = new THREE.BufferGeometry();
+        var positions = new Float32Array( triangles * 3 * 3 );
+        var normals = new Float32Array( triangles * 3 * 3 );
+        var colors = new Float32Array( triangles * 3 * 3 );
+        var color = new THREE.Color();
+        var n = 800, n2 = n / 2;	// triangles spread in the cube
+        var d = 120, d2 = d / 2;	// individual triangle size
+        var pA = new THREE.Vector3();
+        var pB = new THREE.Vector3();
+        var pC = new THREE.Vector3();
+        var cb = new THREE.Vector3();
+        var ab = new THREE.Vector3();
+        for ( var i = 0; i < positions.length; i += 9 ) {
+            // positions
+            var x = Math.random() * n - n2;
+            var y = Math.random() * n - n2;
+            var z = Math.random() * n - n2;
+            var ax = x + Math.random() * d - d2;
+            var ay = y + Math.random() * d - d2;
+            var az = z + Math.random() * d - d2;
+            var bx = x + Math.random() * d - d2;
+            var by = y + Math.random() * d - d2;
+            var bz = z + Math.random() * d - d2;
+            var cx = x + Math.random() * d - d2;
+            var cy = y + Math.random() * d - d2;
+            var cz = z + Math.random() * d - d2;
+            positions[ i ] = ax;
+            positions[ i + 1 ] = ay;
+            positions[ i + 2 ] = az;
+            positions[ i + 3 ] = bx;
+            positions[ i + 4 ] = by;
+            positions[ i + 5 ] = bz;
+            positions[ i + 6 ] = cx;
+            positions[ i + 7 ] = cy;
+            positions[ i + 8 ] = cz;
+            // flat face normals
+            pA.set( ax, ay, az );
+            pB.set( bx, by, bz );
+            pC.set( cx, cy, cz );
+            //.subVectors ( a : Vector3, b : Vector3 ) : this
+            //将该向量设置为a - b。
+            cb.subVectors( pC, pB );
+            ab.subVectors( pA, pB );
+            //将该向量设置为它本身与传入的v的叉积（cross product）。
+            cb.cross( ab );
+            cb.normalize();
+            var nx = cb.x;
+            var ny = cb.y;
+            var nz = cb.z;
+            normals[ i ] = nx;
+            normals[ i + 1 ] = ny;
+            normals[ i + 2 ] = nz;
+            normals[ i + 3 ] = nx;
+            normals[ i + 4 ] = ny;
+            normals[ i + 5 ] = nz;
+            normals[ i + 6 ] = nx;
+            normals[ i + 7 ] = ny;
+            normals[ i + 8 ] = nz;
+            // colors
+            var vx = ( x / n ) + 0.5;
+            var vy = ( y / n ) + 0.5;
+            var vz = ( z / n ) + 0.5;
+            color.setRGB( vx, vy, vz );
+            colors[ i ] = color.r;
+            colors[ i + 1 ] = color.g;
+            colors[ i + 2 ] = color.b;
+            colors[ i + 3 ] = color.r;
+            colors[ i + 4 ] = color.g;
+            colors[ i + 5 ] = color.b;
+            colors[ i + 6 ] = color.r;
+            colors[ i + 7 ] = color.g;
+            colors[ i + 8 ] = color.b;
+        }
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+        geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+        geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
+        geometry.computeBoundingSphere();
+        var material = new THREE.MeshPhongMaterial( {
+            color: 0xaaaaaa, specular: 0xffffff, shininess: 250,
+            side: THREE.DoubleSide, vertexColors: THREE.VertexColors
+        } );
+        mesh = new THREE.Mesh( geometry, material );
+        scene.add( mesh );
+        /**
+         *光线投射Raycaster
+         这个类用于进行raycasting（光线投射）。 光线投射用于进行鼠标拾取（在三维空间中计算出鼠标移过了什么物体）。
+         *
+         * Raycaster( origin : Vector3, direction : Vector3, near : Float, far : Float ) {
+            origin —— 光线投射的原点向量。
+            direction —— 向射线提供方向的方向向量，应当被标准化。
+            near —— 返回的所有结果比near远。near不能为负值，其默认值为0。
+            far —— 返回的所有结果都比far近。far不能小于near，其默认值为Infinity（正无穷。）
+                     *
+         * */
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        var geometry = new THREE.BufferGeometry();
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( 4 * 3 ), 3 ) );
+        var material = new THREE.LineBasicMaterial( { color: 0xffffff, transparent: true } );
+        line = new THREE.Line( geometry, material );
+        scene.add( line );
+        //
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        container.appendChild( renderer.domElement );
+        //
+        stats = new Stats();
+        container.appendChild( stats.dom );
+        //
+        window.addEventListener( 'resize', onWindowResize, false );
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    }
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+    function onDocumentMouseMove( event ) {
+        event.preventDefault();
+        //// 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    }
+    //
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+        stats.update();
+    }
+    function render() {
+        var time = Date.now() * 0.001;
+        mesh.rotation.x = time * 0.15;
+        mesh.rotation.y = time * 0.25;
+        /***
+         * .setFromCamera ( coords : Vector2, camera : Camera ) : null
+            coords —— 在标准化设备坐标中鼠标的二维坐标 —— X分量与Y分量应当在-1到1之间。（方向）
+             camera —— 射线所来源的摄像机。（原点）
+         * 使用一个新的原点和方向来更新射线。
+         *
+         * */
+        raycaster.setFromCamera( mouse, camera );
+        /**
+         * .intersectObject ( object : Object3D, recursive : Boolean, optionalTarget : Array ) : Array
+         object —— 检查与射线相交的物体。
+         recursive —— 若为true，则同时也会检查所有的后代。否则将只会检查对象本身。默认值为false。
+         optionalTarget — （可选）设置结果的目标数组。如果不设置这个值，则一个新的Array会被实例化；如果设置了这个值，
+         则在每次调用之前必须清空这个数组（例如：array.length = 0;）。
+
+         检测所有在射线与物体之间，包括或不包括后代的相交部分。返回结果时，相交部分将按距离进行排序，最近的位于第一个）。
+         该方法返回一个包含有交叉部分的数组:
+
+         [ { distance, point, face, faceIndex, object }, ... ]
+         distance —— 射线投射原点和相交部分之间的距离。
+         point —— 相交部分的点（世界坐标）
+         face —— 相交的面
+         faceIndex —— 相交的面的索引
+         object —— 相交的物体
+         uv —— 相交部分的点的UV坐标。
+
+         当计算这条射线是否和物体相交的时候，Raycaster将传入的对象委托给raycast方法。 这将可以让mesh对于光线投射的响应不同于lines和pointclouds。
+
+         请注意：对于网格来说，面必须朝向射线的原点，以便其能够被检测到。 用于交互的射线穿过面的背侧时，将不会被检测到。如果需要对物体中面的两侧进行光线投射，
+         你需要将material中的side属性设置为THREE.DoubleSide。
+         *
+         *
+         * */
+        var intersects = raycaster.intersectObject( mesh );
+        if ( intersects.length > 0 ) {
+            var intersect = intersects[ 0 ];
+            console.log(intersect);
+            /**
+             * Face3( a : Integer, b : Integer, c : Integer, normal : Vector3, color : Color, materialIndex : Integer )
+             a — 顶点 A 的索引。
+             b — 顶点 B 的索引。
+             c — 顶点 C 的索引。
+             *
+             * */
+            var face = intersect.face;
+            console.log(face);
+            var linePosition = line.geometry.attributes.position;
+            var meshPosition = mesh.geometry.attributes.position;
+
+            /**
+             * BufferAttribute
+             这个类用于存储与BufferGeometry相关联的 attribute（例如顶点位置向量，面片索引，法向量，颜色值，UV坐标以及任何自定义 attribute ）。
+             利用 BufferAttribute，可以更高效的向GPU传递数据。详情和例子见该页。
+
+             在 BufferAttribute 中，数据被存储为任意长度的矢量（通过itemSize进行定义），
+             下列函数如无特别说明， 函数参数中的index会自动乘以矢量长度进行计算。
+             *
+             *
+             * .copyAt ( index1 : Integer, bufferAttribute : BufferAttribute, index2 : Integer ) : null
+             将一个矢量从 bufferAttribute[index2] 拷贝到 array[index1] 中。
+             *
+             * */
+            linePosition.copyAt( 0, meshPosition, face.a );
+            linePosition.copyAt( 1, meshPosition, face.b );
+            linePosition.copyAt( 2, meshPosition, face.c );
+            linePosition.copyAt( 3, meshPosition, face.a );
+            mesh.updateMatrix();
+            line.geometry.applyMatrix( mesh.matrix );
+            line.visible = true;
+        } else {
+            line.visible = false;
+        }
+        renderer.render( scene, camera );
+    }
+</script>
+
+</body>
+</html>

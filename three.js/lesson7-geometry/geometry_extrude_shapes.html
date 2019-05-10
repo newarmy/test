@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - geometry - extrude shapes(二维形状挤出为一个三维几何体)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #222;
+            margin: 0px;
+            overflow: hidden;
+        }
+        a {
+            color: #f80;
+        }
+    </style>
+</head>
+
+<body>
+
+<script src="../js/three.js"></script>
+<script src="../js/controls/TrackballControls.js"></script>
+
+<script>
+    var camera, scene, renderer, controls;
+    init();
+    animate();
+    function init() {
+        var info = document.createElement( 'div' );
+        info.style.position = 'absolute';
+        info.style.top = '10px';
+        info.style.width = '100%';
+        info.style.textAlign = 'center';
+        info.style.color = '#fff';
+        info.style.link = '#f80';
+        info.innerHTML = '<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - geometry extrude shapes';
+        document.body.appendChild( info );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0x222222 );
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+        camera.position.set( 0, 0, 500 );
+        controls = new THREE.TrackballControls( camera, renderer.domElement );
+        controls.minDistance = 200;
+        controls.maxDistance = 500;
+        scene.add( new THREE.AmbientLight( 0x222222 ) );
+        var light = new THREE.PointLight( 0xffffff );
+        light.position.copy( camera.position );
+        scene.add( light );
+        //
+        /**
+         * CatmullRomCurve3
+         使用Catmull-Rom算法， 从一系列的点创建一条平滑的三维样条曲线。
+
+         CatmullRomCurve3( points : Array, closed : Boolean, curveType : String, tension : Float )
+         points – Vector3点数组
+         closed – 该曲线是否闭合，默认值为false。
+         curveType – 曲线的类型，默认值为centripetal。
+         tension – 曲线的张力，默认为0.5。
+         * */
+        var closedSpline = new THREE.CatmullRomCurve3( [
+            new THREE.Vector3( - 60, - 100, 60 ),
+            new THREE.Vector3( - 60, 20, 60 ),
+            new THREE.Vector3( - 60, 120, 60 ),
+            new THREE.Vector3( 60, 20, - 60 ),
+            new THREE.Vector3( 60, - 100, - 60 )
+        ] );
+        //可能的值为centripetal、chordal和catmullrom。
+        closedSpline.curveType = 'catmullrom';
+        closedSpline.closed = true;
+        var extrudeSettings = {
+            steps: 100,
+            bevelEnabled: false,
+            extrudePath: closedSpline
+        };
+        var pts = [], count = 3;
+        for ( var i = 0; i < count; i ++ ) {
+            var l = 20;
+            var a = 2 * i / count * Math.PI;
+            pts.push( new THREE.Vector2( Math.cos( a ) * l, Math.sin( a ) * l ) );
+        }
+        /**
+         * 形状（Shape）
+         使用路径以及可选的孔洞来定义一个二维形状平面。
+         它可以和ExtrudeGeometry、ShapeGeometry一起使用，获取点，或者获取三角面。
+
+         Shape( points : Array )
+         points -- (optional) 一个Vector2数组。
+
+         从点来创建一个Shape。第一个点定义了偏移量， 接下来的点被作为LineCurves加入到curves中。
+
+         如果没有点被指定，一个空的形状将会被创建，且.currentPoint将会被设为原点。
+         * */
+        var shape = new THREE.Shape( pts );
+        /**
+         * 挤压缓冲几何体（ExtrudeBufferGeometry）
+         从一个形状路径中，挤压出一个BufferGeometry。
+
+         ExtrudeBufferGeometry(shapes : Array, options : Object)
+         shapes — 形状或者一个包含形状的数组。
+         options — 一个包含有下列参数的对象：
+
+         curveSegments — int，曲线上点的数量，默认值是12。
+         steps — int，用于沿着挤出样条的深度细分的点的数量，默认值为1。
+         depth — float，挤出的形状的深度，默认值为100。
+         bevelEnabled — bool，对挤出的形状应用是否斜角，默认值为true。
+         bevelThickness — float，设置原始形状上斜角的厚度。默认值为6。
+         bevelSize — float。斜角与原始形状轮廓之间的延伸距离，默认值为bevelThickness-2。
+         bevelSegments — int。斜角的分段层数，默认值为3。
+         extrudePath — THREE.CurvePath对象。一条沿着被挤出形状的三维样条线。
+         UVGenerator — Object。提供了UV生成器函数的对象。
+         该对象将一个二维形状挤出为一个三维几何体。
+
+         当使用这个几何体创建Mesh的时候，如果你希望分别对它的表面和它挤出的侧面使用单独的材质，
+         你可以使用一个材质数组。 第一个材质将用于其表面；第二个材质则将用于其挤压出的侧面。
+         * */
+        var geometry = new THREE.ExtrudeBufferGeometry( shape, extrudeSettings );
+        /**
+         * Lambert网格材质(MeshLambertMaterial)
+         一种非光泽表面的材质，没有镜面高光。
+
+         该材质使用基于非物理的Lambertian模型来计算反射率。 这可以很好地模拟一些表面（例如未经处理的木材或石材），但不能模拟具有镜面高光的光泽表面（例如涂漆木材）。
+
+         使用Gouraud着色模型计算着色。这将计算每个顶点的着色 （即在vertex shader中）并在多边形的面上插入结果。
+
+         由于反射率和光照模型的简单性，MeshPhongMaterial，MeshStandardMaterial或者MeshPhysicalMaterial 上使用这种材质时会以一些图形精度为代价，得到更高的性能。
+         * */
+        var material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
+        var mesh = new THREE.Mesh( geometry, material );
+        scene.add( mesh );
+        //
+        var randomPoints = [];
+        for ( var i = 0; i < 10; i ++ ) {
+            randomPoints.push( new THREE.Vector3( ( i - 4.5 ) * 50, THREE.Math.randFloat( - 50, 50 ), THREE.Math.randFloat( - 50, 50 ) ) );
+        }
+        var randomSpline = new THREE.CatmullRomCurve3( randomPoints );
+        //
+        var extrudeSettings = {
+            steps: 200,
+            bevelEnabled: false,
+            extrudePath: randomSpline
+        };
+        var pts = [], numPts = 5;
+        for ( var i = 0; i < numPts * 2; i ++ ) {
+            var l = i % 2 == 1 ? 10 : 20;
+            var a = i / numPts * Math.PI;
+            pts.push( new THREE.Vector2( Math.cos( a ) * l, Math.sin( a ) * l ) );
+        }
+        var shape = new THREE.Shape( pts );
+        var geometry = new THREE.ExtrudeBufferGeometry( shape, extrudeSettings );
+        var material2 = new THREE.MeshLambertMaterial( { color: 0xff8100, wireframe: false } );
+        var mesh = new THREE.Mesh( geometry, material2 );
+        scene.add( mesh );
+        //
+        var materials = [ material, material2 ];
+        var extrudeSettings = {
+            depth: 20,
+            steps: 1,
+            bevelEnabled: true,
+            bevelThickness: 2,
+            bevelSize: 4,
+            bevelSegments: 1
+        };
+        var geometry = new THREE.ExtrudeBufferGeometry( shape, extrudeSettings );
+        var mesh = new THREE.Mesh( geometry, materials );
+        mesh.position.set( 50, 100, 50 );
+        scene.add( mesh );
+    }
+    function animate() {
+        requestAnimationFrame( animate );
+        controls.update();
+        renderer.render( scene, camera );
+    }
+</script>
+
+</body>
+
+</html>
