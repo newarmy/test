@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - cameras</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #808080;
+            font-family:Monospace;
+            font-size:13px;
+            text-align:center;
+            background-color: #000;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+<script src="../three.js"></script>
+<script>
+    var screenW = window.innerWidth;
+    var screenH = window.innerHeight;
+    var aspect = screenW/screenH;
+
+    var container;
+    var camera, scene, renderer, mesh;
+    var cameraRig, activeCamera, activeHelper;
+    var cameraPerspective, cameraPerspectiveHelper, cameraOrtho, cameraOrthoHelper ;
+
+    init();
+    animate();
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        scene = new THREE.Scene();
+
+
+
+        /**
+         * OrthographicCamera( left : Number, right : Number, top : Number, bottom : Number, near : Number, far : Number )
+         left — 摄像机视锥体左侧面。
+         right — 摄像机视锥体右侧面。
+         top — 摄像机视锥体上侧面。
+         bottom — 摄像机视锥体下侧面。
+         near — 摄像机视锥体近端面。
+         far — 摄像机视锥体远端面。
+         0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2,
+         frustumSize / 2, frustumSize / - 2, 150, 1000
+         * */
+        cameraOrtho = new THREE.OrthographicCamera(
+            screenW/ -2,
+            screenW/2,
+            screenH / 2,
+            screenH / - 2,
+            2,
+            50
+        );
+        cameraOrthoHelper = new THREE.CameraHelper(cameraOrtho);
+        scene.add(cameraOrthoHelper);
+
+        //scene.add( cameraOrtho );
+
+        //球体
+        mesh = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(50, 16, 8),
+            new THREE.MeshBasicMaterial({color:0xffffff, wireframe: true})
+        );
+        scene.add(mesh);
+
+
+        console.dir(cameraOrtho);
+
+         //antialias 抗锯齿
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(screenW, screenH);
+        container.appendChild(renderer.domElement);
+
+        renderer.autoClear = false;
+
+
+        window.addEventListener( 'resize', onWindowResize, false );
+        document.addEventListener( 'keydown', onKeyDown, false );
+    }
+
+    //
+    function onKeyDown( event ) {
+        switch ( event.keyCode ) {
+            case 79: /*O*/
+                activeCamera = cameraOrtho;
+                activeHelper = cameraOrthoHelper;
+                break;
+            case 80: /*P*/
+                activeCamera = cameraPerspective;
+                activeHelper = cameraPerspectiveHelper;
+                break;
+        }
+    }
+
+
+    function onWindowResize() {
+        screenW = window.innerWidth;
+        screenH = window.innerHeight;
+        renderer.setSize( screenW, screenH );
+        cameraOrtho.left = - screenW / 2;
+        cameraOrtho.right =  screenW / 2;
+        cameraOrtho.top = screenH / 2;
+        cameraOrtho.bottom = - screenH / 2;
+        cameraOrtho.updateProjectionMatrix();
+    }
+
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+    }
+    function render() {
+        var r = Date.now() * 0.0005;
+        //mesh.position.x = 70 * Math.cos( r );
+        mesh.position.z = -3 ;
+
+       console.log(mesh.position.x, mesh.position.y, mesh.position.z);
+       // cameraOrtho.far = mesh.position.length();
+        cameraOrtho.updateProjectionMatrix();
+        cameraOrthoHelper.update();
+        cameraOrthoHelper.visible = true;
+
+        renderer.render( scene, cameraOrtho );
+
+    }
+
+</script>
+</body>
+</html>

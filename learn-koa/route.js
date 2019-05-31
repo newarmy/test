@@ -52,6 +52,13 @@ router.post('/7-search', async (ctx, next) => {
    await ctx.render('search', {name: name});
 });
 
+router.post('/login', async(ctx, next) => {
+    let name = ctx.request.body.name;
+    ctx.body= {
+       msg: "你好，"+name+", 登录成功!"
+    };
+});
+
 
 app.use(router.routes());
 app.listen(3000)

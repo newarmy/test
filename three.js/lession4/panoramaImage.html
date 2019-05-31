@@ -42,55 +42,75 @@
      * https://blog.csdn.net/qq_34149805/article/details/76459459
      * --》TreeJs实现全景图
      * **/
-    var camera, scene, renderer;
-
+    var camera, orthoCamera, scene, orthoScene,renderer;
+    var container, mesh;
+    var markerMaterial;
+    var raycaster;
     var isUserInteracting = false,
         lon = 0, //经度;经线;longitude 经度
         lat = 0, // latitude 纬度
         phi = 0,
         theta = 0,
-        distance = 50, //这个值很重要，它决定这相机的位置。左右显示效果
         onPointerDownPointerX = 0,
         onPointerDownPointerY = 0,
         onPointerDownLon = 0,
         onPointerDownLat = 0;
 
+     var  widthSegments = 60;//水平切段数
+     var  heightSegments = 40;//垂直切段数（值小粗糙速度快，值大精细速度慢）
+     var  pRadius = 50;//全景球的半径，推荐使用默认值  ,
+     var distance = 50; // 这个值很重要，它决定这相机的位置。左右显示效果， 控制zoom，
+     var lonLatArr = [{
+        longitude: 1,
+         latitude: 2
+     }];
+    var markers = [];
+
     init();
     animate();
-    function init() {
-        var container, mesh;
-        container = document.getElementById('container');
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 1100);
+    function initCamera() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        camera = new THREE.PerspectiveCamera(75,w/h, 1, 1100);
         //相机的朝向 lookAt的值 ， up默认值（0, 1, 0）
         camera.target = new THREE.Vector3(0, 0, 0);
-        //camera.position.z = 0;
+        orthoCamera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 1, 10);
+        orthoCamera.position.z = 10;
+
         scene = new THREE.Scene();
-
-        // 坐标轴
-        var axes = new THREE.AxisHelper(200);
-        scene.add(axes);
-
-        var geometry = new THREE.SphereBufferGeometry(50, 60, 40);
+        orthoScene = new THREE.Scene();
+        scene.add(camera);
+        orthoScene.add(orthoCamera);
+    }
+    function initHelper(isAdd) {
+        // 坐标轴   红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴.
+        var axes = new THREE.AxisHelper(2000);
+        if(isAdd) {
+            scene.add(axes);
+        }
+    }
+    function initRaycaster() {
+        raycaster = new THREE.Raycaster();
+    }
+    function initSphere() {
+        var geometry = new THREE.SphereBufferGeometry(pRadius, widthSegments, heightSegments);
         // 翻转 X 轴使所有的面都朝里（改变了法向量的方向）
         geometry.scale(-1, 1, 1);
-
-
         // Remap UVs
-
-
-
-
-        var texture = new THREE.TextureLoader().load('./timg.jpg');
+        var texture = new THREE.TextureLoader().load('./main.jpg');
         var material = new THREE.MeshBasicMaterial( { map: texture } );
 
         mesh = new THREE.Mesh( geometry, material );
         scene.add( mesh );
+    }
+    function initRenderer() {
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.autoClear = false;
         renderer.setSize( window.innerWidth, window.innerHeight );
         container.appendChild( renderer.domElement );
-
-
+    }
+    function initEvent() {
         document.addEventListener( 'mousedown', onDocumentMouseDown, false );
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         document.addEventListener( 'mouseup', onDocumentMouseUp, false );
@@ -100,14 +120,94 @@
         document.addEventListener( 'touchend', onTouchEnd, false );
 
         document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+        document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+        document.addEventListener( 'DOMMouseScroll', onDocumentMouseWheel, false );
         window.addEventListener( 'resize', onWindowResize, false );
-        console.log("相机的初始位置为如下");
-        console.log( getCameraPosition());
     }
 
+    function initMarkerMaterial() {
+        var textureLoader = new THREE.TextureLoader();
+        markerMaterial = new THREE.SpriteMaterial({
+            map: textureLoader.load('./pin2.png')
+        });
+
+    }
+    function init() {
+
+        container = document.getElementById('container');
+
+        initCamera();
+        initSphere();
+        initMarkerMaterial();
+        initRaycaster();
+        initHelper(false);
+        initRenderer();
+        initEvent();
+
+
+
+       // console.log("相机的初始位置为如下");
+       // console.log( getCameraPosition());
+    }
+    //---------------------------------------------动画------------------------------------------------------------------
+    function animate() {
+        requestAnimationFrame( animate );
+        if(!isUserInteracting) {
+            //自动漫游
+            autoComputeRotation();
+        }
+        update();
+    }
+    function update() {
+        var pos = getCameraPosition();
+        camera.position.x = pos.x;
+        camera.position.y = pos.y;
+        camera.position.z = pos.z;
+        camera.lookAt( camera.target );
+
+        addMarker();
+        camera.updateProjectionMatrix();
+        renderer.render( scene, camera );
+        renderer.render(orthoScene, orthoCamera)
+
+    }
+    //自动计算经纬度
+    function autoComputeRotation() {
+        lon += 0.03;
+        lat += 0.01;
+    }
+    // 获得相机位置
+    function getCameraPosition (){
+        lat = Math.max(-85, Math.min(85, lat)); // 纬度限定在 [-85,85]
+        phi = THREE.Math.degToRad(90 - lat); // 90 - 纬度
+        theta = THREE.Math.degToRad(lon); // 经度
+        // 经纬度转为3维坐标值， 公式解释为"球体经纬度图解.png"
+        /**
+         * three.js中， 赤道在zox屏幕上，
+         * */
+        var x = distance * Math.sin( phi ) * Math.cos( theta );
+        var y = distance * Math.cos( phi);
+        var z = distance * Math.sin( phi ) * Math.sin( theta );
+
+        return {
+            x: x,
+            y: y,
+            z: z
+        }
+    }
+    //---------------------------------------------动画------------------------------------------------------------------
+
+
+    //-------------------------------------------事件函数----------------------------------------------------------------
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
+
+        orthoCamera.left = -window.innerWidth / 2;
+        orthoCamera.right = window.innerWidth / 2;
+        orthoCamera.top = window.innerHeight / 2;
+        orthoCamera.bottom = -window.innerHeight / 2;
+        orthoCamera.updateProjectionMatrix();
         renderer.setSize( window.innerWidth, window.innerHeight );
     }
     function onTouchStart(event) {
@@ -158,39 +258,118 @@
              这里，就需要一个算法来统一协定。该算法控制的主要内容就是:
                "用户的手指在 x/y 平面轴上的 ∆x/∆y 通过一定的比例(这里是0.1)换算成为 ∆φ/∆∂"
 
-             lat 代表维度（latitude）: 用户上下滑动改变的值，或者手机上下旋转（上为正）
              lon 代表经度（lontitude）: 用户左右滑动改变的值，或者手机左右旋转 (右为正)
+             lat 代表维度（latitude）: 用户上下滑动改变的值，或者手机上下旋转（上为正）
+
              * */
             //计算当前点的经纬度 （角度）
             lon = -( event.clientX - onPointerDownPointerX ) * 0.1 + onPointerDownLon;
             lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
         }
     }
-    function onDocumentMouseUp() {
+    function onDocumentMouseUp(e) {
         isUserInteracting = false;
+        var lonLatObj = calLonLat(e.clientX, e.clientY);
+        //console.log("---------------START 经纬度：--------------");
+       // console.dir(lonLatObj);
+       // console.log("---------------END：--------------");
+        lonLatArr.push(lonLatObj);
+
     }
     function onDocumentMouseWheel( event ) {
-        distance += event.deltaY * 0.05; //Returns a double representing the vertical scroll amount.
+        // console.log("---------------------------"+event.deltaY * 0.02+"-----------------------------------------");
+        distance += event.deltaY * 0.02; //Returns a double representing the vertical scroll amount.
         distance = THREE.Math.clamp( distance, 1, 50 );
+        // console.log("-------------------------------"+distance+"--------------------------------------------------");
+
+    }
+    //-------------------------------------------事件函数----------------------------------------------------------------
+    // --------------------------------------------加点-----------------------------------------------------------------
+    // 加点
+    function addMarker() {
+        if(lonLatArr.length === 0) {
+            return;
+        }
+
+
+        lonLatArr.forEach(function (lonLatObj, index) {
+           // console.log(lonLatObj.longitude, lonLatObj.latitude);
+            for(var i = 0, len = markers.length; i < len; i++) {
+                var mk = markers[i];
+                if(mk.mid === "marker_"+index) {
+                    return;
+                }
+            }
+            var sprite = new THREE.Sprite(markerMaterial);
+            sprite.scale.set(2.0, 2.0, 2.0);
+            sprite.mid = "marker_"+index;
+            orthoScene.add(sprite);
+            markers.push(sprite);
+
+            var vec3 = sphereCoordToXyz(lonLatObj.longitude, lonLatObj.latitude);
+            var screenXY = threeXY2ScreenXY(vec3, camera);
+
+            var test = vec3.clone();
+            test.project(camera);
+
+           // console.log(test);
+            if (test.x > -1 && test.x < 1 && test.y > -1 && test.y < 1 && test.z > -1 && test.z < 1) {
+                sprite.scale.set(32, 32, 32);
+                sprite.position.set(screenXY.x, screenXY.y, 1);
+            } else {
+                sprite.position.set(0, 0, 0);
+            }
+        });
+
     }
 
-    function animate() {
-        requestAnimationFrame( animate );
-        update();
+    // --------------------------------------------加点-----------------------------------------------------------------
+
+
+    // -------------------------------------------------坐标转换---------------------------------------------------------
+    //屏幕坐标转经纬度
+    function calLonLat(x, y) {
+        var vec = screenXY2ThreeWorldXYZ(x,y);
+        var lonLat = xyzToSphereCoord(vec);
+        return lonLat;
     }
-    function update() {
-        var pos = getCameraPosition();
-        camera.position.x = pos.x;
-        camera.position.y = pos.y;
-        camera.position.z = pos.z;
-        camera.lookAt( camera.target );
-        renderer.render( scene, camera );
+
+
+    // 屏幕坐标转three.js三维坐标, 画布的宽高度并不一定是window.innerWidth或window.innerHeight，要根据画布实际的宽高度进行替换
+
+    function screenXY2ThreeWorldXYZ(x, y) {
+        var mouse = new THREE.Vector3();
+        // 将鼠标位置归一化为设备坐标。x 和 y 方向的取值范围是 (-1 to +1)
+        mouse.x = (x/window.innerWidth)*2 -1;
+        mouse.y = -(y/window.innerHeight)*2 +1;
+        // 通过摄像机和鼠标位置更新射线
+        raycaster.setFromCamera(mouse, camera);
+        // 计算物体和射线的焦点
+        var intersects = raycaster.intersectObjects(scene.children);
+        console.log('===intersects.length =='+intersects.length );
+        if (intersects.length === 1) {
+            return intersects[0].point;
+        }
+        else {
+            return null;
+        }
     }
-    // 获得相机位置
-    function getCameraPosition (){
-        lat = Math.max(-85, Math.min(85, lat)); // 纬度限定在 [-85,85]
-        phi = THREE.Math.degToRad(90 - lat); // 90 - 纬度
-        theta = THREE.Math.degToRad(lon); // 经度
+     // 三维坐标转经纬度
+    function xyzToSphereCoord(vector) {
+        var phi = Math.acos(vector.y / Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z));
+        var theta = Math.atan2(vector.x, vector.z);
+
+        return {
+            longitude: theta < 0 ? -theta : 2*Math.PI - theta,
+            latitude: Math.PI/2 - phi
+        };
+    }
+
+    //经纬度转三维坐标
+    function sphereCoordToXyz(lon, lat) {
+       var lat = Math.max(-85, Math.min(85, lat)); // 纬度限定在 [-85,85]
+         var phi = THREE.Math.degToRad(90 - lat); // 90 - 纬度
+        var theta = THREE.Math.degToRad(lon); // 经度
         // 经纬度转为3维坐标值， 公式解释为"球体经纬度图解.png"
         /**
          * three.js中， 赤道在zox屏幕上，
@@ -199,12 +378,31 @@
         var y = distance * Math.cos( phi);
         var z = distance * Math.sin( phi ) * Math.sin( theta );
 
-        return {
-            x: x,
-            y: y,
-            z: z
-        }
+        return  new THREE.Vector3(x, y, z);
     }
+
+    /**
+     * 将three.js三维坐标转换成屏幕上的二维坐标
+     * @param  vec THREE.Vector3 vector three.js三维坐标
+     * @param camera 相机对象
+     * @return {x:int,y:int} 屏幕坐标
+     *
+     *
+     */
+    function threeXY2ScreenXY(vec, camera) {
+        var screenCoord = {};
+        /**
+         * vec.project(camera) 这句的意思是，将一个三维坐标，投影到相机平面上，
+         * 使之变成一个二维坐标。需要注意的是，
+         * 投影得到的结果是一个标准向量(或者叫单位向量)，其值是限定在[-1,1]范围内的
+         *
+         * */
+        vec.project(camera);
+        screenCoord.x = (0.5 + vec.x/2) * window.innerWidth;
+        screenCoord.y = (0.5 - vec.y/2) * window.innerHeight;
+        return screenCoord;
+    }
+    // -------------------------------------------------坐标转换---------------------------------------------------------
 </script>
 
 </body>
