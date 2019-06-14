@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - cameras</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #808080;
+            font-size:13px;
+            text-align:center;
+            background-color: #000;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        .opr{
+            position: fixed;
+            top:10px;
+            left:10px;
+            width: 300px;
+            height:40px;
+        }
+    </style>
+</head>
+<body>
+<div class="opr">
+    请选择fov（垂直的角度）:
+<select id="fovdom">
+    <option value="0">请选择fov</option>
+    <option value="30">30</option>
+    <option value="40">40</option>
+    <option value="50">50</option>
+    <option value="60">60</option>
+    <option value="70">70</option>
+    <option value="80">80</option>
+    <option value="90">90</option>
+</select>
+</div>
+<script src="../three.js"></script>
+<script>
+    var screenW = window.innerWidth;
+    var screenH = window.innerHeight;
+    var aspect = screenW/screenH;
+
+    var container;
+    var camera, scene, renderer, mesh;
+    var axesHelper;
+
+
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(50, aspect, 100, 1000);
+        camera.position.x = 0;
+        camera.position.y = 0;
+        camera.position.z = 200;
+        //红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴.
+        axesHelper = new THREE.AxesHelper(500);
+         /**
+          *
+          * radius — 球体半径，默认为1。
+          widthSegments — 水平分段数（沿着经线分段），最小值为3，默认值为8。
+          heightSegments — 垂直分段数（沿着纬线分段），最小值为2，默认值为6。
+          phiStart — 指定水平（经线）起始角度，默认值为0.
+          |---(0为x轴反方向， PI/2 为z抽正方向， PI为x轴正方向， 3PI/2为z轴反方向)---|
+          phiLength — 指定水平（经线）扫描角度的大小，默认值为 Math.PI * 2。
+          thetaStart — 指定垂直（纬线）起始角度，默认值为0。
+          |---(从y轴正方向到y轴反方向)---|
+          thetaLength — 指定垂直（纬线）扫描角度大小，默认值为 Math.PI。
+          *
+          * */
+        //球体
+        mesh = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(30, 16, 8, Math.PI/2, Math.PI/4, 0, Math.PI/2),
+            new THREE.MeshBasicMaterial({color:0xffff00, wireframe: true})
+        );
+        scene.add(mesh);
+        //
+        scene.add(axesHelper);
+
+
+         //antialias 抗锯齿
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(screenW, screenH);
+        container.appendChild(renderer.domElement);
+
+        //renderer.autoClear = false;
+
+
+        window.addEventListener( 'resize', onWindowResize, false );
+
+    }
+
+    function onWindowResize() {
+        screenW = window.innerWidth;
+        screenH = window.innerHeight;
+        aspect = screenW / screenH;
+        renderer.setSize( screenW, screenH );
+        camera.aspect = aspect;
+        camera.updateProjectionMatrix();
+    }
+
+    function animate() {
+        requestAnimationFrame( animate );
+        render();
+    }
+    function render() {
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        camera.updateProjectionMatrix();
+        //renderer.clear();
+        //console.dir(camera)
+        renderer.render( scene, camera );
+    }
+    // 事件
+    var fovdom = document.querySelector('#fovdom');
+    fovdom.onchange = function (e) {
+        if(fovdom.value != "0")
+           camera.fov = fovdom.value;
+    }
+    // 入口
+    init();
+    animate();
+</script>
+</body>
+</html>

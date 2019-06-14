@@ -7,28 +7,43 @@
     <style>
         body {
             color: #808080;
-            font-family:Monospace;
             font-size:13px;
             text-align:center;
             background-color: #000;
             margin: 0px;
             overflow: hidden;
         }
-
+        .opr{
+            position: fixed;
+            top:10px;
+            left:10px;
+            width: 300px;
+            height:40px;
+        }
     </style>
 </head>
 <body>
-
+<div class="opr">
+    球体的Z值:
+    <select id="fovdom">
+        <option value="0">请选择Z分量</option>
+        <option value="30">30</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="400">400</option>
+        <option value="500">500</option>
+        <option value="900">900</option>
+    </select>
+</div>
 <script src="../three.js"></script>
 <script>
     var screenW = window.innerWidth;
     var screenH = window.innerHeight;
-    var aspect = screenW/screenH;
 
     var container;
-    var camera, scene, renderer, mesh;
-    var cameraRig, activeCamera, activeHelper;
-    var cameraPerspective, cameraPerspectiveHelper, cameraOrtho, cameraOrthoHelper ;
+    var scene, renderer, mesh;
+    var cameraOrtho, cameraOrthoHelper ;
+    var zValue = 200;
 
     init();
     animate();
@@ -57,23 +72,22 @@
             screenW/2,
             screenH / 2,
             screenH / - 2,
-            2,
-            50
+            50,
+            500
         );
+        cameraOrtho.position.z = -20;
         cameraOrthoHelper = new THREE.CameraHelper(cameraOrtho);
         scene.add(cameraOrthoHelper);
 
         //scene.add( cameraOrtho );
 
         //球体
+        /***/
         mesh = new THREE.Mesh(
             new THREE.SphereBufferGeometry(50, 16, 8),
             new THREE.MeshBasicMaterial({color:0xffffff, wireframe: true})
         );
         scene.add(mesh);
-
-
-        console.dir(cameraOrtho);
 
          //antialias 抗锯齿
         renderer = new THREE.WebGLRenderer({antialias: true});
@@ -85,23 +99,8 @@
 
 
         window.addEventListener( 'resize', onWindowResize, false );
-        document.addEventListener( 'keydown', onKeyDown, false );
-    }
 
-    //
-    function onKeyDown( event ) {
-        switch ( event.keyCode ) {
-            case 79: /*O*/
-                activeCamera = cameraOrtho;
-                activeHelper = cameraOrthoHelper;
-                break;
-            case 80: /*P*/
-                activeCamera = cameraPerspective;
-                activeHelper = cameraPerspectiveHelper;
-                break;
-        }
     }
-
 
     function onWindowResize() {
         screenW = window.innerWidth;
@@ -119,12 +118,8 @@
         render();
     }
     function render() {
-        var r = Date.now() * 0.0005;
-        //mesh.position.x = 70 * Math.cos( r );
-        mesh.position.z = -3 ;
-
-       console.log(mesh.position.x, mesh.position.y, mesh.position.z);
-       // cameraOrtho.far = mesh.position.length();
+        mesh.position.z = zValue;
+        cameraOrtho.lookAt(mesh.position);
         cameraOrtho.updateProjectionMatrix();
         cameraOrthoHelper.update();
         cameraOrthoHelper.visible = true;
@@ -133,6 +128,13 @@
 
     }
 
+    // 事件
+    var fovdom = document.querySelector('#fovdom');
+    fovdom.onchange = function (e) {
+        if(fovdom.value != "0")
+            zValue = Number(fovdom.value);
+    }
+    // 入口
 </script>
 </body>
 </html>
