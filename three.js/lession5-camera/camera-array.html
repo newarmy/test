@@ -19,19 +19,20 @@
 <script>
     var camera, scene, renderer;
     var mesh;
+    var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+    var AMOUNT = 6;
+    var WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
+    var HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
+    var cameras = [];
     init();
     animate();
     function init() {
-        var ASPECT_RATIO = window.innerWidth / window.innerHeight;
-        var AMOUNT = 6;
-        var WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
-        var HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
-        var cameras = [];
+
         for ( var y = 0; y < AMOUNT; y ++ ) {
             for ( var x = 0; x < AMOUNT; x ++ ) {
                 var subcamera = new THREE.PerspectiveCamera( 40, ASPECT_RATIO, 0.1, 10 );
                 //自定义的缓存数据
-                subcamera.view = new THREE.Vector4(
+                subcamera.viewport  = new THREE.Vector4(
                     Math.floor( x * WIDTH ),
                     Math.floor( y * HEIGHT ),
                     Math.ceil( WIDTH ),
@@ -43,13 +44,13 @@
                 subcamera.position.multiplyScalar( 2 );
                 subcamera.lookAt( 0, 0, 0 );
                 //subcamera.setViewport()
-                subcamera.setViewOffset(window.innerWidth,
+                /*subcamera.setViewOffset(window.innerWidth,
                     window.innerWidth,
                     Math.floor( x * WIDTH ),
                     Math.floor( y * HEIGHT ),
                     Math.ceil( WIDTH ),
                     Math.ceil( HEIGHT )
-                );
+                );*/
                 //更新物体及其子级的全局变换
                 subcamera.updateMatrixWorld();
                 cameras.push( subcamera );
@@ -137,9 +138,23 @@ ArrayCamera 用于更加高效地使用一组已经预定义的摄像机来渲�
         window.addEventListener( 'resize', onWindowResize, false );
     }
     function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+        var WIDTH = ( window.innerWidth / AMOUNT ) * window.devicePixelRatio;
+        var HEIGHT = ( window.innerHeight / AMOUNT ) * window.devicePixelRatio;
+        camera.aspect = ASPECT_RATIO;
         camera.updateProjectionMatrix();
-        renderer.setSize( window.innerWidth, window.innerHeight );
+        for ( var y = 0; y < AMOUNT; y ++ ) {
+            for (var x = 0; x < AMOUNT; x++) {
+                var subcamera = camera.cameras[AMOUNT * y + x];
+                subcamera.viewport.set(
+                    Math.floor(x * WIDTH),
+                    Math.floor(y * HEIGHT),
+                    Math.ceil(WIDTH),
+                    Math.ceil(HEIGHT));
+                subcamera.aspect = ASPECT_RATIO;
+                subcamera.updateProjectionMatrix();
+            }
+        }
     }
     function animate() {
         mesh.rotation.x += 0.005;

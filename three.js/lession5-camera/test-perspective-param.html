@@ -10,6 +10,8 @@
 	</head>
 	<body>
 		<script src="../js/three.js"></script>
+		<script src="../js/libs/stats.min.js"></script>
+		<script src="../js/libs/dat.gui.min.js"></script>
 		<script>
 			//three.js三要素是： 场景，  摄像机， 渲染器
 			var aspect = window.innerWidth/window.innerHeight;
@@ -21,21 +23,7 @@
 			// 创建一个立方体，并添加到场景
 			var geometry = new THREE.BoxGeometry(1,1,1);
 			console.dir(geometry.faceVertexUvs);
-            /*geometry.faceVertexUvs = [];
-            var face1 = [ new THREE.Vector2(0, 1),  new THREE.Vector2(0, 0),  new THREE.Vector2(1, 1)];
-            var face2 = [ new THREE.Vector2(0, 0),  new THREE.Vector2(1, 0),  new THREE.Vector2(1, 1)];
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);
-            geometry.faceVertexUvs.push(face1);
-            geometry.faceVertexUvs.push(face2);*/
+
 			var material = new THREE.MeshBasicMaterial({color:0x00ffff, map: texture});
 			var cube = new THREE.Mesh(geometry, material);
 			scene.add(cube);
@@ -69,7 +57,44 @@
             rendererSmall.domElement.style.left = "3px";
             rendererSmall.domElement.style.border ="1px solid red";
 			
-			//渲染场景
+
+
+            //
+            //初始化性能插件
+            var stats;
+
+            function initStats() {
+                stats = new Stats();
+                document.body.appendChild(stats.dom);
+            }
+
+            //生成gui设置配置项
+            var gui;
+            function initGui() {
+                //声明一个保存需求修改的相关数据的对象
+                gui = {
+                    "fov": 50,
+                    "zoom": 1,
+                    "focus": 10,
+                    redraw: function () {
+                        camera.fov = gui.fov;
+                        camera.zoom = gui.zoom;
+                        camera.focus = gui.focus;
+                        console.log(".getEffectiveFOV = "+camera.getEffectiveFOV());
+                        camera.updateProjectionMatrix();
+                    }
+                };
+                var datGui = new dat.GUI();
+                //将设置属性添加到gui当中，gui.add(对象，属性，最小值，最大值）
+				// gui.add(controls, 'size', 0, 10).onChange(controls.redraw);
+                datGui.add(gui, 'fov', 30, 120).step(1).onChange(gui.redraw); //step，保证每次数值更改为整数，
+                datGui.add(gui, 'zoom', 0.1, 10).onChange(gui.redraw);
+                datGui.add(gui, 'focus').onChange(gui.redraw);
+                gui.redraw();
+            }
+
+
+            /// /渲染场景
 			function render() {
 
 				requestAnimationFrame(render);
@@ -83,6 +108,8 @@
 				rendererSmall.render(scene, cameraSmall)
 			}
 			render();
+            initStats();
+            initGui();
 		</script>
 	</body>
 </html>

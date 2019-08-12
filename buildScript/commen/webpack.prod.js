@@ -37,7 +37,7 @@ module.exports = merge(common, {
         }),
         new ExtractTextPlugin("css/[name].css"),
         new es3ifyPlugin(),
-        new UglifyJsPlugin({
+        /*new UglifyJsPlugin({
             uglifyOptions: {
                 ie8:true, //default: false, Enable IE8 Support
                 //properties (default: true) --
@@ -53,10 +53,14 @@ module.exports = merge(common, {
                 // },
                // warnings: false
             }
-        }),
+        }),*/
 
 
     ],
+    /**
+     * https://segmentfault.com/a/1190000013476837
+     * https://juejin.im/post/5af1677c6fb9a07ab508dabb
+     * */
     optimization: {
         splitChunks: {
             chunks: 'all',

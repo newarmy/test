@@ -40,6 +40,15 @@
 
         scene = new THREE.Scene();
 
+
+        /***
+         * camera.position 相机的位置
+         * camera.lookAt() 相机的朝向
+         * camera.fov 相机的视角
+         * near
+         * far
+         *
+         * */
         camera = new THREE.PerspectiveCamera(50, 0.5 * aspect, 1, 10000);
 
         camera.position.z = 2500;

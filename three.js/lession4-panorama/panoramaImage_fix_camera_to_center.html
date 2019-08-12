@@ -81,7 +81,7 @@
         //相机的朝向 lookAt的值 ， up默认值（0, 1, 0）
         camera.target = new THREE.Vector3(0, 0, 0);
         camera.position = new THREE.Vector3(0, 0, 0);
-        orthoCamera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 1, 10);
+        orthoCamera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 0.1, 10);
         orthoCamera.position.z = 10;
         orthoCamera.updateProjectionMatrix();
 
@@ -134,21 +134,16 @@
         window.addEventListener( 'resize', onWindowResize, false );
     }
 
-    function initMarkerMaterial() {
-        var textureLoader = new THREE.TextureLoader();
-        markerMaterial = new THREE.SpriteMaterial({
-            map: textureLoader.load('./pin2.png')
-        });
 
-    }
     function init() {
 
         container = document.getElementById('container');
 
         initCamera();
         initSphere();
-        createMarker();
         initMarkerMaterial();
+        createMarker();
+
         initRaycaster();
         initHelper(false);
         initRenderer();
@@ -168,7 +163,9 @@
         }
         update();
     }
+    var i = 0;
     function update() {
+        i++;
         var pos = getCameraPosition();
         camera.target.x = pos.x;
         camera.target.y = pos.y;
@@ -178,10 +175,22 @@
         camera.fov = max_fov + (zoom_lvl / 100) * (min_fov - max_fov);
         camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
-        //orthoCamera.lookAt( orthoScene.position );
+        orthoCamera.lookAt( orthoScene.position );
         //orthoCamera.updateProjectionMatrix();
         updateMarker();
         renderer.render( scene, camera );
+        console.log("zoom = "+camera.zoom);
+        renderer.autoClear = false;
+        if(i < 100) {
+            console.log(orthoScene.children.length)
+            orthoScene.children.forEach(function (e) {
+                if (e instanceof THREE.Sprite) {
+                    // move the sprite along the bottom
+                    console.dir(e.position);
+                }
+            });
+        }
+
         renderer.render(orthoScene, orthoCamera);
 
 
@@ -309,6 +318,14 @@
     }
     //-------------------------------------------事件函数----------------------------------------------------------------
     // --------------------------------------------加点-----------------------------------------------------------------
+
+    function initMarkerMaterial() {
+        var textureLoader = new THREE.TextureLoader();
+        markerMaterial = new THREE.SpriteMaterial({
+            map: textureLoader.load('./pin2.png')
+        });
+
+    }
     // 加点
     function updateMarker() {
         if(lonLatArr.length === 0) {
@@ -322,7 +339,7 @@
             var test = vec3.clone();
             test.project(camera);
 
-            // console.log(test);
+            //console.dir(test);
             if (test.x > -1 && test.x < 1 && test.y > -1 && test.y < 1 && test.z > -1 && test.z < 1) {
                 obj.sprite.scale.set(32, 32, 32);
                 obj.sprite.position.set(screenXY.x, screenXY.y, 1);
