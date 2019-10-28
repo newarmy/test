@@ -19,6 +19,8 @@
 <div id="filter">
 </div>
 <script>
+    var script = document.createElement('script');
+    alert(script.readyState);
 function g(id){
 	return document.querySelector(id);
 }
@@ -53,6 +55,8 @@ function g(id){
 	}
   var filtered = [12, 5, 8, 130, 44].filter(isBigEnough);
    g("#filter").innerHTML = filtered.join('-');
+
+
 </script>
 
 

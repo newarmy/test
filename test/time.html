@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="myDiv">
+    <label for="set"><input id="set" value="0"></label>
+    <button id="btn">开始</button>
+    <button id="reset">重置</button>
+</div>
+<script>
+
+    function noop() {
+
+    }
+    function countDown(opt) {
+        this.pauseCallback = opt.pauseCallback || noop;
+        this.startCallback = opt.startCallback || noop;
+        this.finishCallback = opt.finishCallback || noop;
+        this.resetCallback = opt.resetCallback || noop;
+        this.runCallback = opt.runCallback || noop;
+        this.totalTime = opt.totalTime || 8700; //倒计时的总时间
+        this.lastTime = 0; //储存暂停时的毫秒数(静态)
+        this.currentTime = 0; //当前的毫秒数
+        this.passTime = 0; //已经经过的毫秒数
+        this.leftTime = 0; // 剩余的毫秒数
+        this.timerFlag = null;
+        this.isRunning = false;
+        this.init();
+    }
+    countDown.prototype = {
+      constructor: countDown,
+        init: function () {
+          this.showTime(this.totalTime);
+        },
+      start: function () {
+          var k = this;
+          k.isRunning = true;
+          k.lastTime = Date.now();
+          if(k.totalTime === 0) {
+              return;
+          }
+          k.startCallback();
+          k.timerFlag = requestAnimationFrame(function () {
+              k.animation.call(k);
+          });
+
+      },
+        pause: function () {
+          var k = this;
+            k.isRunning = false;
+            cancelAnimationFrame(k.timerFlag);
+            this.pauseCallback(k.passTime, k.leftTime);
+        },
+      animation: function () {
+        var k = this;
+          k.currentTime = Date.now();
+          k.passTime += (k.currentTime - k.lastTime);
+          k.leftTime = k.totalTime - k.passTime;
+          k.lastTime = k.currentTime;
+          k.showTime(k.leftTime);
+          if(k.leftTime > 0) {
+              k.runCallback(k.passTime, k.leftTime);
+              k.timerFlag = requestAnimationFrame(function () {
+                  k.animation.call(k);
+              });
+          } else {
+              cancelAnimationFrame(k.timerFlag);
+              k.finishCallback();
+              k.totalTime = 0;
+          }
+
+
+      },
+      showTime: function (ms) {
+          if(ms > 0) {
+              var second = Math.floor(ms/1000);
+              var milliSecond = Math.floor(ms%1000);
+              second = (second < 10) ? '0'+second : second;
+              milliSecond = (milliSecond < 100) ? '0'+ Math.floor(milliSecond/10) : Math.floor(milliSecond/10);
+              set.value = second +"\""+milliSecond;
+          } else {
+              set.value = "00\"00";
+          }
+
+      },
+        reset: function () {
+            cancelAnimationFrame(this.timerFlag);
+            this.totalTime = 8700; //倒计时的总时间
+            this.startTime = 0; //储存暂停时的毫秒数(静态)
+            this.currentTime = 0; //当前的毫秒数
+            this.passTime = 0; //已经经过的毫秒数
+            this.leftTime = 0; // 剩余的毫秒数
+            this.timerFlag = null;
+            this.isRunning = false;
+            this.init();
+            this.resetCallback();
+        },
+    };
+
+    var cd = new countDown({
+        runCallback: function (passTime, leftTime){
+             console.log(passTime, '  ', leftTime);
+        }
+    });
+    btn.onclick = function () {
+        if(!cd.isRunning) {
+            cd.start();
+            btn.innerHTML = "暂停"
+        } else {
+            cd.pause();
+            btn.innerHTML = "开始"
+        }
+    }
+    reset.onclick = function () {
+        cd.reset();
+    }
+</script>
+</body>
+</html>
