@@ -1,0 +1,19 @@
+.tpl1{
+    --tplColor: #fff;  /*模板的主色调*/
+    /*--tplBgColor: #000;*/   /*模板的背景颜色*/
+    --tplBgColor: #2f3346;   /*模板的背景颜色*/
+    --focusWidth: 6.9rem;  /*焦点图区域的宽度*/
+    /*--fontColor1: #fff;*/  /*h3字体颜色*/
+    --fontColor1: #fff;  /*h3字体颜色*/
+    /*--fontColor2: #aaa;*/  /*h4字体颜色*/
+    --fontColor2: #fff;  /*h4字体颜色*/
+    /*--focusSpot: #fff;*/ /*焦点图圆点颜色*/
+    --focusSpot: #878787; /*焦点图圆点颜色*/
+}
+.con{ font-family: "Microsoft Yahei","Helvetica Neue",Helvetica,Arial,STHeiTi,sans-serif;
+    color:#252525; font-size:14px; line-height:20px; -webkit-user-select:none;
+    background-color: var(--tplBgColor);width:7.5rem;margin: 0 auto
+}
+.box{width:7.5rem}
+.tit{display: block;height: 0.9rem;text-align: center;margin-top:0.3rem;margin-bottom: 0.4rem;}
+.tit span{letter-spacing:0.1rem;display: inline-block;height: 0.9rem;border-bottom:0.06rem solid var(--tplColor);font-size: 0.45rem;color: var(--tplColor);line-height: 0.9rem;}

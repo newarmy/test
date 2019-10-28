@@ -83,7 +83,7 @@ gulp.task('copy', function () {
      如： src('./a/b/*.js',{base: './a'}),
      dest('./c')
      这样输出的c目录下的 为 b/*.js
-     
+
      * Glob base
      A glob base - sometimes called glob parent - is the path segment before
      any special characters in a glob string. As such, the glob base of /src/js/**.js is /src/js/.

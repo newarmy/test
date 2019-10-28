@@ -6,23 +6,38 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const TerserPlugin = require('terser-webpack-plugin'); // 压缩 js
 const OptimizeCSSAssetsPlugin  = require('optimize-css-assets-webpack-plugin');// 压缩 css
+const PrerenderSPAPlugin = require('prerender-spa-plugin');
+const Renderer = PrerenderSPAPlugin.PuppeteerRenderer;
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+
 const config = require('./config');
 module.exports = {
     context: path.resolve(__dirname),
     mode: 'production',
     entry: {
-      main: config.enterUrl
+      main: config.enterUrl,
     },
     output: {
         filename: 'js/[name].js',
-        path: path.resolve(__dirname, config.prod.output),
+        path: path.resolve(__dirname, config.static.output),
     },
     module: {
         rules: [
             {
                 test: /\.vue$/,
-                loader: 'vue-loader',
+                use: [{
+                    loader: 'vue-loader',
+                    options: {
+                        transformAssetUrls :{
+                            video: ['src', 'poster'],
+                            source: 'src',
+                            img: ['src', ':data-src'],
+                            image: ['xlink:href', 'href'],
+                            use: ['xlink:href', 'href']
+                        },
+                        prettify: true
+                    }
+                }],
                 include: [path.resolve(__dirname, 'src')]
             },
             {
@@ -36,6 +51,7 @@ module.exports = {
                         plugins: ['@babel/transform-runtime']
                     }
                 }
+
             },
             {
                 test: /\.(png|jpg|gif)$/i,
@@ -105,12 +121,45 @@ module.exports = {
         //     manifest: require('./dist/js/vendors-manifest.json')
         // }),
         new HtmlWebpackPlugin({
-            filename: path.resolve(__dirname, config.prod.output, 'index.html'),
+            filename: path.resolve(__dirname, config.static.output, 'index.html'),
             template: path.resolve(__dirname, 'assets', 'imageTpl.html'),
             //minify: false,
             chunks: ['main', 'vendors']
         }),
+        //https://github.com/chrisvfritz/prerender-spa-plugin
+        //https://www.cnblogs.com/kdcg/p/9606302.html
+        //https://blog.csdn.net/qq_36320160/article/details/101469184
+        new PrerenderSPAPlugin({
+            staticDir: path.join(__dirname, config.static.output),
+            outputDir: path.join(__dirname, config.static.output),
+            routes: [ '/' ],
+            indexPath: path.join(__dirname, config.static.output, 'index.html'),
+            /*server: {
+                port: 8001,
+                proxy: {
+                    '/': {
+                        target: 'http://localhost:8001/page/',
+                        secure: false
+                    }
+                }
+            },*/
+           /* minify: {
+                collapseBooleanAttributes: false,
+                collapseWhitespace: false,
+                collapseInlineTagWhitespace: false,
+                decodeEntities: true,
+                keepClosingSlash: true,
+                sortAttributes: true
+            },*/
+            renderer: new Renderer({
+                inject: {
+                    foo: 'bar'
+                },
 
+                headless: false,
+                renderAfterDocumentEvent: 'render-event'
+            })
+        }),
 
 
         //包分析

@@ -7,16 +7,11 @@ module.exports = {
         main: './src/main.js'
     },
     output: {
-        filename: '[name].js',
+        filename: 'js/[name].js',
         path: path.resolve(__dirname, 'dist'),
     },
     module: {
         rules: [
-            {
-                test: /\.vue$/,
-                loader: 'vue-loader',
-            },
-
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
@@ -26,14 +21,41 @@ module.exports = {
 
 
             },
+            {
+                test: /\.(ttf|eof)$/,
+                use:[
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[path][name].[ext]',
+                            publicPath: '../'
+                        }
+                    }
+                ]
+            },
 
             {
-                test: /\.(png|jpg|gif)$/,
-                use: 'url-loader?limit=4000&name=[path][name].[ext]'
+                test: /\.(png|jpg|gif)$/i,
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            fallback: 'file-loader?name=[path][name].[ext]&publicPath=../',
+                            limit:3000
+                        }
+                    }
+                ],
             },
+
             {
                 test: /\.html$/,
-                loader: 'html-loader?publicPath=./'
+                use: [{
+                    loader: 'html-loader',
+                    options: {
+                        //加载资源
+                      attrs: [':data-src', 'img:src'],
+                    }
+                }]
             }
         ]
     },

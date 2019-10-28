@@ -1,0 +1,26 @@
+ {
+  "name": "mymvvm",
+  "version": "1.0.0",
+  "description": "a plugin which is for sohu home page",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --display-error-details --config webpack.dev.config.js",
+    "prod": "webpack --display-error-details --config webpack.prod.config.js"
+  },
+  "author": "dxj",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^0.26.1",
+    "extract-text-webpack-plugin": "^2.0.0-rc.3",
+    "html-loader": "^0.4.5",
+    "raw-loader": "^0.5.1",
+    "string-loader": "0.0.1",
+    "style-loader": "^0.13.1",
+    "uglifyjs-webpack-plugin": "^0.2.1",
+    "url-loader": "^0.5.7",
+    "file-loader": "^1.1.5",
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1",
+    "html-webpack-plugin": "^2.30.1"
+  }
+}

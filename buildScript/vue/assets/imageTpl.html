@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>animation</title>
+    <style>
+        *{margin:0;padding:0}
+        html,body{
+            width: 7.5rem;
+            height:100%;
+        }
+        #app{width: 100%; height: 100%;}
+    </style>
+    <script>
+        (function (win) {
+            var doc = document.documentElement;
+
+            function getW() {
+                var cw = doc.clientWidth;
+                var resCw = Math.min(cw, 768);
+                resCw = Math.max(resCw, 300);
+                return resCw;
+            }
+
+            var finalW = getW();
+            doc.style.fontSize = finalW / 7.5 + 'px';
+
+            function resizeLayout() {
+                setTimeout(function () {
+                    finalW = getW();
+                    doc.style.fontSize = finalW / 7.5 + 'px';
+                }, 500);
+            }
+
+            var resizeEvt = 'onorientationchange' in win ? 'orientationchange' : 'resize';
+            win.addEventListener(resizeEvt, function () {
+                resizeLayout();
+            });
+        }(window));
+    </script>
+
+</head>
+<body>
+<div id="app"></div>
+</body>
+</html>
