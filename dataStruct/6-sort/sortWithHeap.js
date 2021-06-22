@@ -5,6 +5,7 @@
 function round (num) {
     return Math.round(num);
 }
+// [2,3,23,43,23,22]
 // arr数组的前len个数据调整成最大堆
 function createMaxHeap (arr, len) {
 

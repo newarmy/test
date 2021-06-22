@@ -8,7 +8,7 @@ function swap(arr, i, j) {
 }
 /***
  *选主元
- * 去头，中，尾的中位值
+ * 取头，中，尾的中位值
  * 8 12 3 的中位值是8
  * */
 function median3(arr, leftIndex, rightIndex) {

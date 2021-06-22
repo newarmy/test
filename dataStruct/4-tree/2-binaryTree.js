@@ -176,14 +176,16 @@ function postOrderTraversalByStack (BT) {
             stack.push(BT); // ---第一次碰到这个结点-----
             BT = BT.left;
         }
+		
         let temp = null;
         if(!stack.isEmpty()) {
             BT = stack.pop(); // 结点弹出堆栈  // ---第二次碰到这个结点-----
             temp = BT;
             BT = BT.right;// 转向右子树
             if(BT && !BT.isTraversal) {
-                stack.push(temp);
+                stack.push(temp); //如果temp右子树没有被访问，在把temp放回栈中
             } else {
+                //如果temp右子树被访问了，就访问temp结点
                 console.log(temp.data); // 第三次碰到这个结点
                 temp.isTraversal = true;
             }
@@ -191,7 +193,9 @@ function postOrderTraversalByStack (BT) {
 
     }
 }
+
 console.log('----非递归后序遍历----');
+console.log(testTree);
 postOrderTraversalByStack(testTree);
 /**
  * 队列

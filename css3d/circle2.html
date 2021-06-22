@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN" style="font-size:50px;">
+
+<head>
+	<title>css 3d 模型</title>
+	<meta charset="UTF-8">
+	<meta id="vp" name="viewport"
+		content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<meta name="apple-touch-fullscreen" content="YES" />
+	<meta name="HandheldFriendly" content="true">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no">
+	<style>
+		.camera {
+			width: 800px;
+			height: 600px;
+			perspective: 1000px;
+			perspective-origin: center 0;
+			/*
+	   perspective-origin指摄像机的中心点位置，
+	   默认值是center center(或50% 50%)。换句话说，作为摄像机镜头的三个维度，
+	   perspective-origin代表了X和Y轴，而perspective代表Z轴。摄像机在三维空间进行移动
+
+	   */
+		}
+
+		.stage {
+			width: 100%;
+			height: 100%;
+			border: 2px dashed #000;
+			transform: rotateZ(-13deg) rotateX(80deg);
+			transform-style: preserve-3d;
+		}
+
+		.car {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin-left: -150px;
+			margin-top: -100px;
+			width: 300px;
+			height: 200px;
+			color: red;
+			background-color: yellow;
+			transform-style: preserve-3d;
+			transform: rotateY(13deg) rotateX(-90deg);
+			backface-visibility: hidden;
+		}
+
+		.circle {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin-left: -200px;
+			margin-top: -200px;
+			width: 400px;
+			height: 400px;
+			color: white;
+			/* background-color: rgba(255, 85, 85, 1); */
+			transform-style: preserve-3d;
+			transform: rotateZ(36deg);
+		}
+
+		.boll {
+			position: absolute;
+			width: 60px;
+			height: 60px;
+			transform: rotateX(-90deg) rotateY(36deg);
+			backface-visibility: hidden;
+		}
+
+		.b1 {
+			background-color: #000;
+			transform: rotateX(-90deg) rotateY(36deg) rotateZ(13deg) scale(1.0);
+		}
+
+		.b2 {
+			background-color: blue;
+			transform: rotateX(-90deg) rotateY(36deg) rotateZ(13deg) scale(0.8);
+		}
+
+		.b3 {
+			background-color: blueviolet;
+			transform: rotateX(-90deg) rotateY(36deg) rotateZ(13deg) scale(0.6);
+		}
+
+		.b4 {
+			background-color: chartreuse;
+			transform: rotateX(-90deg) rotateY(36deg) rotateZ(13deg) scale(0.6);
+		}
+
+		.b5 {
+			background-color: crimson;
+			transform: rotateX(-90deg) rotateY(36deg) rotateZ(13deg) scale(0.8);
+		}
+	</style>
+
+</head>
+
+<body>
+	<!-- 
+   在没有设置box的rotate、translateZ的情形下，box的深度没有变化，
+   导致摄像机Camera透过perspective看出去的位置都是相同的
+   
+   
+   在进行旋转的时候，物体的坐标系也是跟着旋转的，
+   所以先平移再旋转和先旋转再平移的效果是不一样的！
+   这时候一定要分清楚当前坐标系！
+
+     -->
+	<div class="camera">
+		<div class="stage">
+			<div class="car"></div>
+			<div class="circle">
+				<div data-index="0" class="boll b1">1</div>
+				<div data-index="1" class="boll b2">2</div>
+				<div data-index="2" class="boll b3">3</div>
+				<div data-index="3" class="boll b4">4</div>
+				<div data-index="4" class="boll b5">5</div>
+			</div>
+		</div>
+	</div>
+	<div class="btn-box">
+		<div class="right">向右</div>
+		<div class="left">向左</div>
+	</div>
+
+	<script src="./starRotate.js"></script>
+</body>
+
+</html>

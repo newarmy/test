@@ -71,7 +71,7 @@
     function initCamera() {
         var w = window.innerWidth;
         var h = window.innerHeight;
-        camera = new THREE.PerspectiveCamera(75,w/h, 1, 1100);
+        camera = new THREE.PerspectiveCamera(75,w/h, 1, 11000);
         //相机的朝向 lookAt的值 ， up默认值（0, 1, 0）
         camera.target = new THREE.Vector3(0, 0, 0);
         orthoCamera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 1, 10);

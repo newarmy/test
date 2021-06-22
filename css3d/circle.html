@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-CN" style="font-size:50px;">
+<head >
+	<title>css 3d 模型</title>
+	<meta charset="UTF-8">
+	<meta id="vp" name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<meta name="apple-touch-fullscreen" content="YES" />
+	<meta name="HandheldFriendly" content="true">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="format-detection" content="telephone=no">
+	<style>
+	   .camera {
+	   width: 800px; 
+	   height: 600px;
+	   perspective: 1000px;
+	   perspective-origin: center 0; 
+	   /*
+	   perspective-origin指摄像机的中心点位置，
+	   默认值是center center(或50% 50%)。换句话说，作为摄像机镜头的三个维度，
+	   perspective-origin代表了X和Y轴，而perspective代表Z轴。摄像机在三维空间进行移动
+
+	   */
+	   }
+       .stage { 
+	      width:100%;
+		  height:100%; 
+		  border:2px dashed #000; 
+		  transform: rotateY(0deg) rotateX(80deg);
+		  transform-style:preserve-3d; 
+		  }
+          .car{
+			position: absolute;
+			left:50%;
+			top:50%;
+			margin-left: -150px;
+			margin-top:-100px;
+			width:300px;
+			height:200px;
+			color:red;
+			background-color: yellow;
+			transform-style:preserve-3d; 
+			transform: rotateX(-90deg);
+			backface-visibility: hidden;
+		 }
+         .circle{
+			position: absolute;
+			left:50%;
+			top:50%;
+			margin-left: -200px;
+			margin-top:-200px;
+			width:400px;
+			height:400px;
+			color:white;
+			/* background-color: rgba(255, 85, 85, 1); */
+			transform-style:preserve-3d; 
+			transform: rotateZ(36deg);
+		 }
+		 .boll{
+			 position: absolute;
+			 width:60px;
+			 height:60px;
+			 transform: rotateX(-90deg) rotateY(36deg);
+			 backface-visibility: hidden;
+		 }
+		 .b1{
+			 background-color: #000;
+			 transform: rotateX(-90deg) rotateY(36deg) scale(1.0);
+		 }
+		 .b2{
+			 background-color: blue;
+			 transform: rotateX(-90deg) rotateY(36deg) scale(0.8);
+		 }
+		 .b3{
+			 background-color: blueviolet;
+			 transform: rotateX(-90deg) rotateY(36deg) scale(0.6);
+		 }
+		 .b4{
+			 background-color: chartreuse;
+			 transform: rotateX(-90deg) rotateY(36deg) scale(0.6);
+		 }
+		 .b5{
+			 background-color: crimson;
+			 transform: rotateX(-90deg) rotateY(36deg) scale(0.8);
+		 }
+		 
+	</style>
+	
+</head>
+<body>
+   <!-- 
+   在没有设置box的rotate、translateZ的情形下，box的深度没有变化，
+   导致摄像机Camera透过perspective看出去的位置都是相同的
+   
+   
+   在进行旋转的时候，物体的坐标系也是跟着旋转的，
+   所以先平移再旋转和先旋转再平移的效果是不一样的！
+   这时候一定要分清楚当前坐标系！
+
+     -->
+   <div class="camera">
+       <div class="stage">
+		   <div class="car"></div>
+		    <div class="circle">
+				<div data-index="0" class="boll b1"></div>
+				<div data-index="1" class="boll b2"></div>
+				<div data-index="2" class="boll b3"></div>
+				<div data-index="3" class="boll b4"></div>
+				<div data-index="4" class="boll b5"></div>
+			</div>
+	   </div>
+   </div>
+   <div class="btn-box">
+		<div class="right">向右</div>
+		<div class="left">向左</div>
+   </div>
+  <script>
+	let bolls =	document.querySelectorAll('.boll');
+	let bollParent = document.querySelector('.circle');
+	let rightBtn = document.querySelector('.right');
+	let leftBtn = document.querySelector('.left');
+	let arr = Array.from(bolls);
+	let angle = 36*Math.PI/180;
+	let angle2 = 72*Math.PI/180;
+	
+	let r = 200;
+	let halfW = 30;
+	let sin = r*Math.sin(angle);
+	let cos = r*Math.cos(angle);
+	let sin2 = r*Math.sin(angle2);
+	let cos2 = r*Math.cos(angle2);
+	arr.forEach(function (item, index) {
+		switch(index) {
+			  case 0:
+				  item.style.left = (r+sin -halfW)+'px';
+				  item.style.top = (r+cos - halfW)+'px';
+				  break;
+				  case 1:
+				  item.style.left = (r+sin2 -halfW)+'px';
+				  item.style.top = (r-cos2 - halfW)+'px';
+				  break;
+				  case 2:
+				  item.style.left = (r -halfW)+'px';
+				  item.style.top = (r-r - halfW)+'px';
+				  break;
+			  
+				  case 3:
+				  item.style.left = (r-sin2 -halfW)+'px';
+				  item.style.top = (r-cos2 - halfW)+'px';
+				  break;
+				  case 4:
+				  item.style.left = (r - sin -halfW)+'px';
+				  item.style.top = (r + cos - halfW)+'px';
+				  break;
+			  
+		}
+	});
+	leftBtn.addEventListener('click', function(e) {
+		if(isRunning) {
+			return;
+		}
+	   dir = 'left';
+	   setPosition(dir);
+	   isRunning = true;
+	   requestAnimationFrame(normalRotateFunc);
+	   
+	});
+	rightBtn.addEventListener('click', function (e) {
+		if(isRunning) {
+			return;
+		}
+		dir = 'right';
+		setPosition(dir);
+		isRunning = true;
+	    requestAnimationFrame(normalRotateFunc);
+	});
+	let baseAngle = 1 ;
+	let count = 0;
+	let rightLimit = -72;
+	let leftLimit = 72;
+	let dir = 'right'// or left;
+	let isRunning = false;
+	let position = 0;
+	let scales = [
+	    {
+			start: 0.8,
+        	end: 1.0
+		},
+		{
+			start: 0.6,
+        	end: 0.8
+		},
+		{
+			start: 0.6,
+        	end: 0.6
+		},
+		{
+			start: 0.8,
+			end: 0.6,
+		},
+		{
+			start: 1,
+        	end: 0.8
+		},
+		
+	];
+	let sortArr=[];
+	let numPerCircle = 0.2/72;
+	// 0 1 2 3 4
+	function setPosition(dir) {
+		sortArr = [];
+		let scales2 = JSON.parse(JSON.stringify(scales));
+		let pos = 0;
+		if (dir === 'right') {
+            position -= 1;
+			if(position < 0) {
+				position = 4;
+			}
+			pos = position;
+			for(let i = 0; i < 5; i++) {
+				if(pos < 0) {
+					pos = 4;
+				}
+				sortArr.push({
+					dom: arr[pos],
+                    animate: scales2[i]
+				});
+				pos--;
+				
+			}
+		} else if(dir === 'left'){
+
+			position += 1;
+			if(position >= 5) {
+				position = 0;
+			}
+			pos = position;
+			for(let i = 0; i < 5; i++) {
+				if(pos > 4) {
+					pos = 0;
+				}
+				sortArr.push({
+					dom: arr[pos],
+                    animate: scales2[i]
+				});
+				pos++;
+			}
+		}
+		
+		
+		
+	}
+	//rotateX、rotateZ的旋转正方向是顺时针，rotateY的旋转正方向是逆时针。
+	function normalRotateFunc() {
+		    
+			bollParent.style.transform = 'rotateZ('+(36+baseAngle)+'deg)';
+			let copyCount = count;
+			if(dir === 'right'){
+				copyCount = - copyCount;
+			}
+			let circle = numPerCircle*copyCount;
+			sortArr[0].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg) scale('+(sortArr[0].animate.start+circle)+')';
+			sortArr[1].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[1].animate.start+circle)+')';
+			sortArr[2].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[2].animate.start)+')';
+			sortArr[3].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[3].animate.start-circle)+')';
+			sortArr[4].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)   scale('+(sortArr[4].animate.start-circle)+')';
+			if(dir === 'left') {
+				baseAngle+=1;
+				count+=1;
+				if(baseAngle >= 360) {
+					baseAngle = 0;
+				}
+				if(count === leftLimit) {
+					count = 0;
+					//baseAngle--;
+					isRunning = false;
+					return;
+				}
+				
+			} else if(dir === 'right') {
+				baseAngle-=1;
+				count-=1;
+				if(baseAngle <= -360) {
+					baseAngle = 0;
+				}
+				if(count === rightLimit) {
+					//baseAngle++;
+					count = 0;
+					isRunning = false;
+					return;
+				}
+			}
+			requestAnimationFrame(normalRotateFunc);
+		
+			
+		
+	}
+	function autoRotateFunc() {
+		    
+			bollParent.style.transform = 'rotateZ('+(36+baseAngle)+'deg)';
+			let copyCount = count;
+			copyCount = - copyCount;
+			let circle = numPerCircle*copyCount;
+			sortArr[0].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg) scale('+(sortArr[0].animate.start+circle)+')';
+			sortArr[1].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[1].animate.start+circle)+')';
+			sortArr[2].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[2].animate.start)+')';
+			sortArr[3].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)  scale('+(sortArr[3].animate.start-circle)+')';
+			sortArr[4].dom.style.transform = 'rotateX(-90deg) rotateY('+(36+baseAngle)+'deg)   scale('+(sortArr[4].animate.start-circle)+')';
+			
+				baseAngle -= 1;
+				count -= 1;
+				if(baseAngle <= -360) {
+					baseAngle = 0;
+				}
+				if(count === rightLimit) {
+					console.log('------------------------------------------------------------------------------------------');
+					//baseAngle++;
+					count = 0;
+					if(stopAutoRotate) {
+						isRunning = false;
+						console.log('position = ', position);
+						return;
+					}
+					setPosition('right');
+				}
+				requestAnimationFrame(autoRotateFunc);
+			
+		
+	}
+	function autoRotate() {
+		if(isRunning) {
+			return;
+		}
+		isRunning = true;
+		setPosition('right');
+	    requestAnimationFrame(autoRotateFunc);
+	}
+	//autoRotate();
+	let stopAutoRotate = false;
+	let stageDom = document.querySelector('.stage');
+	let btnBoxDom = document.querySelector('.btn-box');
+	// stageDom.addEventListener('mouseenter', function (e) {
+	// 	isRunning = false;
+    //     stopAutoRotate = true;
+	// })
+	// stageDom.addEventListener('mouseleave', function (e) {
+	// 	setTimeout(function () {
+	// 		stopAutoRotate = false;
+	// 		autoRotate();
+	// 	});
+	// })
+	let stopAutoRotateTimer = null;
+	let startAutoRotateTimer = null;
+	btnBoxDom.addEventListener('mouseenter', function (e) {
+		stopAutoRotate = true;
+	})
+	btnBoxDom.addEventListener('mouseleave', function (e) {
+		clearTimeout(startAutoRotateTimer);
+		startAutoRotateTimer = null;
+		if(isRunning) {
+			startAutoRotateTimer = setTimeout(function () {
+				console.log(isRunning);
+				if(!isRunning) {
+					stopAutoRotate = false;	
+					autoRotate();
+				}
+			}, 1500);
+			return;
+		}
+		stopAutoRotate = false;	
+		autoRotate();
+		
+    })
+  </script>
+</body>
+</html>

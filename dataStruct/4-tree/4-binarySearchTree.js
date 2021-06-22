@@ -24,21 +24,21 @@ function TreeNode (opt) {
     this.parent = null;
     this.isTraversal = false; // 非递归后序遍历使用的标记位
 }
-//递归
+//递归 查找
 function findByRecursion(x, tree) {
     if(!tree) {
         return null;
     }
     if(x > tree.data) {
-        return find(x, tree.right); //尾递归 ==》 循环
+        return findByRecursion(x, tree.right); //尾递归 ==》 循环
     } else if(x < tree.data) {
-        return find(x, tree.left)//尾递归 ==》 循环
+        return findByRecursion(x, tree.left)//尾递归 ==》 循环
     } else {
         return tree;
     }
 }
 
-//循环
+//循环 查找
 function findByLoop(x, tree) {
     while(tree) {
         if(x < tree.data) {
@@ -122,7 +122,7 @@ function deleteTreeNode(x, tree){
             tree.data = tmp.data; //左子树的最大值替换掉当前结点的值
             tree.left = deleteTreeNode (tree.data, tree.left);// 删除左子树的最大值
         } else {
-            tmp = tree; //
+            //tmp = tree; //
             if(!tree.left) {
                 tree = tree.right
             } else if(!tree.right) {

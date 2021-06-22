@@ -9,9 +9,16 @@ let imgs1 = require('./data/imgs-1');
 let imgs2 = require('./data/imgs-2');
 let imgs3 = require('./data/imgs-3');
 let comments = require('./data/comment');
+let liveObj = require('./data/live');
 let app = new Koa();
 let router = new Router({
     prefix: '/good'
+});
+router.get('/live', async (ctx, next) => {
+    ctx.set('Access-Control-Allow-Origin', '*');//http://localhost:63343
+    ctx.set('Access-Control-Allow-Credentials', true);
+    let ms = (new Date()).getTime();
+    ctx.body = liveObj(ms);
 });
 router.get('/scene', async (ctx, next) => {
     ctx.body =sceneObj

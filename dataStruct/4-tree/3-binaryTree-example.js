@@ -60,7 +60,7 @@ function preOrderTraversal (BT) {
 }
 
 /**
- * 找出叶子结点（改造先序遍历算法）
+ * 找出叶子结点的数据（改造先序遍历算法）
  * */
 
 function getLeafNode (BT) {
