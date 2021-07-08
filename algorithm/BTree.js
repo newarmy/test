@@ -15,6 +15,7 @@ class Node {
         }
         k.keyArr[index] = key;
         k.keyNum = k.keyArr.length;
+        
     }
     removeKey(key) {
         let k = this;

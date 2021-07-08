@@ -8,14 +8,15 @@
 * 3. 回溯算法
 * */
 
-export default class Stack {
+// export default
+class Stack {
     constructor () {
         this.list = [];
         this.top = 0;
         this.maxSize = 10;
     }
     push(element) {
-        if(this.top > this.maxSize) {
+        if(this.top >= this.maxSize) {
             return;
         }
         this.list[this.top] = element;
