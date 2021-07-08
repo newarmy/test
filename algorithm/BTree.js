@@ -1,3 +1,5 @@
+
+// btree.js
 class Node {
     constructor (isLeaf, MaxKeyNum, MaxChildNum) {
         this.isLeaf = isLeaf || false;//是否是叶子节点
@@ -15,7 +17,7 @@ class Node {
         }
         k.keyArr[index] = key;
         k.keyNum = k.keyArr.length;
-        
+
     }
     removeKey(key) {
         let k = this;
