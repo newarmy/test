@@ -1,0 +1,118 @@
+<!--
+ * @Author: your name
+ * @Date: 2021-11-03 16:46:28
+ * @LastEditTime: 2021-11-03 17:54:23
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \test\test\testProxy.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        <!-- 垂直居中 -->
+        .container {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(0,0,0,.5);
+            text-align: center;
+            font-size: 0; /*line-height:0, */
+            white-space: nowrap;
+            overflow: auto;
+        }
+
+        .container:after {
+            content: '';
+            display: inline-block;
+            height: 100%;
+            vertical-align: middle;
+        }
+
+        .dialog {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: left;
+            font-size: 14px;
+            white-space: normal;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="dialog">
+        dddddd
+    </div>
+</div>
+<div id="myDiv">
+    <label for="set"><input id="set" value="0"></label>
+    <button id="btn">开始</button>
+    <button id="reset">重置</button>
+</div>
+<script>
+
+// let val1 = 2;
+// let val2 = 3;
+// let sum = 0;
+//   // 维持一个执行副作用的栈
+// const runningEffects = []
+
+// const createEffect = fn => {
+//   // 将传来的 fn 包裹在一个副作用函数中
+//   const effect = () => {
+//     runningEffects.push(effect)
+//     fn()
+//     runningEffects.pop()
+//   }
+
+//   // 立即自动执行副作用
+//   effect()
+// }
+//  createEffect(() => {
+//      sum = val1 + val2;
+//  });
+//  console.log(sum);
+//  console.log(runningEffects);
+
+let effectFuncs = [];
+//监听
+function track(target, property) {
+    effectFuncs.push({obj: target, key: property, func: function() {
+        alert(target[property]);
+    }});
+}
+//触发
+function trigger(target, property) {
+    effectFuncs.forEach((item) => {
+        if(item.obj === target && item.key === property) {
+            item.func();
+        }
+    });
+}
+const dinner = {
+  meal: 'tacos'
+}
+
+const handler = {
+  get(target, property, receiver) {
+    track(target, property)
+    return Reflect.get(...arguments)
+  },
+  set(target, property, value, receiver) {
+    trigger(target, property)
+    return Reflect.set(...arguments)
+  }
+}
+
+const proxy = new Proxy(dinner, handler);
+console.log(proxy.meal);
+console.log('dinner = ', dinner.meal);
+proxy.meal = 'test';
+</script>
+</body>
+</html>
