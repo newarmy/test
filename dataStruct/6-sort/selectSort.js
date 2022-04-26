@@ -23,7 +23,7 @@ function selectionSort (arr) {
                 minDataIndex = j;
             }
         }
-        // 将未排序部分的最小元换到有序部分的最后位置
+        // 将未排序部分的最小元换到有序部分的最后位置 i是有序的最后一个位置index， minDataIndex是最小数位置index
         if(arr[i] > arr[minDataIndex]) {
             let tmp = arr[i];
             arr[i] = arr[minDataIndex];

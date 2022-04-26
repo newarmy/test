@@ -14,7 +14,7 @@ function swap(arr, i, j) {
 function median3(arr, leftIndex, rightIndex) {
 
     let centerIndex = Math.floor((leftIndex+rightIndex)/2);
-    console.log(leftIndex, centerIndex, rightIndex);
+    console.log('============',leftIndex, centerIndex, rightIndex);
     if(arr[leftIndex] > arr[centerIndex]) {
         swap(arr, leftIndex, centerIndex);
     }
@@ -48,7 +48,7 @@ function quickSort(arr, left, right) {
         return;
     }
     let pivot = median3(arr, left, right);
-    console.log(pivot);
+    console.log("pivot = ", pivot);
     let i = left;
     let j = right -1;
     for(; ; ) {

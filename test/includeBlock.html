@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>包含块</title>
+    <style>
+        
+      .boxP{
+          width: 500px;
+          height: 100px;
+          padding:10px;
+          background-color: red;
+      }
+      .boxC{
+          background-color: aqua;
+          height:auto;
+      }
+      .con{
+          background-color: beige;
+          margin: 10px;
+      }
+      .boxP1 {
+          position: absolute;
+          background-color: azure;
+      }
+      .boxP2{
+          /*transform: translateX(10px); */
+          will-change: transform;
+          background-color: blue;
+      }
+      .con1{
+          position: absolute;
+      }
+      .con2{
+          position: fixed;
+          right: 10px;
+      }
+
+      .boxC{
+          width: auto;
+      }
+      .con3{
+          display: inline;
+          width: auto;
+          white-space: nowrap;
+      }
+    </style>
+</head>
+<body>
+    <!-- 正常流中的包含块 --->
+    <div class="boxP">
+        <div class="boxC">
+           <p class="con">One</p>
+           <p class="con">One</p>
+        </div>
+    </div>
+    <!-- position 的包含块 --->
+    <div class="boxP boxP1">
+        <div class="boxC">
+           <p class="con con1">One</p>
+        </div>
+    </div>
+    <!-- fixed 的包含块 --->
+    <div class="boxP">
+        <div class="boxC">
+           <p class="con con2">One</p>
+        </div>
+    </div>
+    <!-- fixed 的包含块的transform不为none --->
+    <div class="boxP boxP2">
+        <div class="boxC boxC1">
+           <p class="con con2">One</p>
+        </div>
+    </div>
+    <!--
+        width:auto ：https://zhuanlan.zhihu.com/p/75357979
+        height计算规则：https://blog.csdn.net/lunhui1994_/article/details/115373235
+    -->
+    <div class="boxP">
+        <div class="boxC">
+           <p class="con con3">One</p>
+           <p class="con con3">One</p>
+           <p class="con">dddddddddddddddddddddddddddddddddddddddddddddddddd</p>
+        </div>
+    </div>
+</body>
+</html>

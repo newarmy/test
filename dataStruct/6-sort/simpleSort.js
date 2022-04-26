@@ -121,7 +121,7 @@ function insertSort (arr) {
 function insertSortWithSourceArray (arr) {
    let len = arr.length;
    for(let i = 1; i < len; i++) {
-       let tmp = arr[i];
+       let tmp = arr[i]; //新来的要排序的
        let j = i;
        for (; j > 0 && arr[j-1] > tmp; j--) { // arr[j-1] 是在上一次的排序结果的最后一个数
            arr[j] = arr[j-1];

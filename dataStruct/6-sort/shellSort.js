@@ -7,14 +7,17 @@
  *
  * 原始的希尔增量序列为
  * DM = N/2, DK = DK+1/2;
+ * 
+ * https://baijiahao.baidu.com/s?id=1631531130010150845&wfr=spider&for=pc
  * */
 function round (N) {
     return Math.floor(N/2);
 }
-
+let num = 0;
 function shellSort (arr) {
     let len = arr.length;
     for (let D = round(len); D > 0; D = round(D)) {// 增量序列
+        console.log(++num, D);
         for(let i = D; i < len; i++) {// 插入排序
             let tmp = arr[i];
             let j = i;

@@ -1,0 +1,71 @@
+<html>
+<body>
+    <style>
+        .filter{
+            -webkit-filter: blur(10px);
+            /* filter: blur(10px); */
+            /* filter: brightness(23); */
+            /* filter: drop-shadow(16px 16px 10px black); */
+            /* filter: hue-rotate(90deg); */
+            filter: blur(7px) opacity(50%);
+            width: 100%;
+        }
+    </style>
+    <div id="mian_div">
+        <li id="time_li">time</li>
+        <li>geekbang</li>
+    </div>
+     <div class="img-box">
+         <img class="filter" src="//m4.auto.itc.cn/c_fit,w_300,h_200/29577035.JPG" />
+     </div>
+    <p id="demo"> 强制布局 demo</p>
+    <button onclick="foo()"> 添加新元素 </button>
+ 
+    <script>
+        function foo() {
+            let main_div = document.getElementById("mian_div")   
+            console.log(main_div.offsetHeight)   
+            let new_node = document.createElement("li")
+            let textnode = document.createTextNode("time.geekbang")
+            new_node.appendChild(textnode);
+            document.getElementById("mian_div").appendChild(new_node);
+            // 强制布局 demo
+            //console.log(main_div.offsetHeight)
+        }
+        //布局抖动
+        function foo1() {
+            let time_li = document.getElementById("time_li")
+            for (let i = 0; i < 100; i++) {
+                let main_div = document.getElementById("mian_div")
+                let new_node = document.createElement("li")
+                let textnode = document.createTextNode("time.geekbang")
+                new_node.appendChild(textnode);
+               
+                document.getElementById("mian_div").appendChild(new_node);
+            }
+        }
+
+        function enter() {
+            console.log('enter');
+            for(let i = 0; i < 20000; i++) {
+                let ii = 2;
+            }
+            firstFunc();
+        }
+        function firstFunc() {
+            for(let i = 0; i < 20000; i++) {
+                let ii = 2;
+            }
+            secondFunc();
+            console.log('firstFunc');
+        }
+        function secondFunc() {
+            for(let i = 0; i < 20000; i++) {
+                let ii = 2;
+            }
+            console.log('secondFunc');
+        }
+        enter();
+    </script>
+</body>
+</html>
